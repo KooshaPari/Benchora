@@ -1,13 +1,20 @@
 # gauge
 
-Modern benchmarking framework for Rust with statistical analysis and beautiful HTML reports.
+Modern benchmarking + xDD testing framework for Rust with statistical analysis and beautiful HTML reports.
 
 ## Features
 
+### Benchmarking
 - **Statistical Analysis**: Mean, median, p95, p99, stddev
 - **HTML Reports**: Interactive flamegraphs and charts
 - **Load Testing**: Concurrent benchmarking
 - **Comparisons**: Compare benchmark runs over time
+
+### xDD Testing (from xdd-lib)
+- **Property Testing**: Reusable strategies for proptest/quickcheck
+- **Contract Testing**: Port/Adapter verification framework
+- **Mutation Testing**: Coverage tracking utilities
+- **SpecDD**: Specification parsing and validation
 
 ## Installation
 
@@ -18,6 +25,7 @@ gauge = { git = "https://github.com/KooshaPari/gauge" }
 
 ## Usage
 
+### Benchmarking
 ```rust
 use gauge::{benchmark, group};
 
@@ -27,7 +35,15 @@ benchmark!("my_function").run(|| {
 
 group!("string_ops", || {
     benchmark!("concat").run(|| format!("{} {}", "a", "b"));
-    benchmark!("replace").run(|| "hello".replace("l", ""));
+});
+```
+
+### Property Testing
+```rust
+use gauge::proptest::{regex_strategy, numeric_range};
+
+proptest!(|(s in regex_strategy(r"\w+"))| {
+    prop_assert!(validate(&s));
 });
 ```
 
@@ -35,9 +51,12 @@ group!("string_ops", || {
 
 ```
 src/
-├── core/         # Benchmark runner
-├── reporters/    # HTML, JSON, CSV output
-└── load/        # Load testing utilities
+├── benchmarking/   # Criterion-based benchmarking
+├── proptest/     # Property testing strategies
+├── quickcheck/   # QuickCheck integration
+├── mutation/     # Mutation testing
+├── contracts/    # Contract testing (SpecDD)
+└── reporters/    # HTML, JSON, CSV output
 ```
 
 ## License
