@@ -14,7 +14,6 @@ serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 proptest = "1.0"
 quickcheck = "1.0"
-mutagen = "0.2"
 
 [dev-dependencies]
 tempfile = "3.0"
@@ -24,3 +23,5 @@ predicates = "3.0"
 [[bench]]
 name = "my_benchmark"
 harness = false
+
+[workspace]
