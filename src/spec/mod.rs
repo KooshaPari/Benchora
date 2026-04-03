@@ -183,9 +183,9 @@ pub mod validator {
 
         /// Validate a specification.
         pub fn validate(&mut self, spec: &Spec) -> XddResult<()> {
-            self.validate_metadata(&spec.spec)?;
-            self.validate_features(&spec.features)?;
-            self.validate_requirements(&spec.requirements)?;
+            self.validate_metadata(&spec.spec);
+            self.validate_features(&spec.features);
+            self.validate_requirements(&spec.requirements);
 
             if !self.errors.is_empty() {
                 return Err(XddError::spec(format!(

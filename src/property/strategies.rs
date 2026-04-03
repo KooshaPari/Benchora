@@ -13,8 +13,8 @@
 //! - Collection strategies (non-empty, bounded size)
 //! - Composite strategies (valid entities)
 
-use proptest::strategy::{Strategy, ValueTree};
-use proptest::test_runner::TestRunner;
+use proptest::prelude::*;
+use proptest::strategy::Strategy;
 use crate::domain::{XddError, XddResult};
 
 /// Result type for strategy validation.
@@ -128,7 +128,8 @@ pub fn email_strategy() -> impl Strategy<Value = String> {
 
 /// Generate a random bounded integer.
 pub fn int_strategy(min: i64, max: i64) -> impl Strategy<Value = i64> {
-    proptest::num::i64::Bounded::new(min, max)
+    // Use inclusive range for proptest
+    min..=max
 }
 
 /// Generate a random non-empty string.

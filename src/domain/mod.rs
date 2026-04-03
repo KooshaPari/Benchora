@@ -40,11 +40,14 @@ impl XddError {
 
     /// Add context to an error.
     pub fn with_context(mut self, key: impl Into<String>, value: impl Serialize) -> Self {
-        let map = self.context.as_object_mut().unwrap_or_else(|| {
+        // Ensure context is an object
+        if self.context.is_null() || !self.context.is_object() {
             self.context = serde_json::json!({});
-            self.context.as_object_mut().unwrap()
-        });
-        map.insert(key.into(), serde_json::json!(value));
+        }
+        // Now safely get the mutable reference
+        if let Some(map) = self.context.as_object_mut() {
+            map.insert(key.into(), serde_json::json!(value));
+        }
         self
     }
 
