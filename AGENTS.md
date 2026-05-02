@@ -1,37 +1,19 @@
 # AGENTS.md — Benchora
 
-Rust benchmarking and performance-testing framework for the Phenotype ecosystem — criterion-based benchmarks, regression tracking, metrics.
+## Project Overview
+- **Name**: Benchora
+- **Location**: KooshaPari/Benchora
+- **Status**: Active development
 
-## Repository identity
+## AgilePlus Mandate
+All work MUST be tracked in AgilePlus:
+- Reference: /Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus
+- CLI: `cd /Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus && agileplus <command>`
 
-- Language: Rust (see `rust-toolchain.toml`).
-- Entry point: `Cargo.toml` (root).
-- Source: `src/`. Benchmarks: `benches/`. Tests: `tests/`.
-- Spec: `SPEC.md`.
+## Git & Branch Discipline
+- Feature branches: `worktrees/<topic>/`
+- Canonical: `main`
+- Never commit directly to `main`
 
-## Build & test (verified from README)
-
-```bash
-cargo build
-cargo test
-cargo bench
-```
-
-Pre-commit hooks: `.pre-commit-config.yaml` is committed; run `pre-commit install` when contributing.
-
-## Governance
-
-- Spec: `SPEC.md`.
-- Code of Conduct: `CODE_OF_CONDUCT.md`.
-- License: see `LICENSE`.
-- Traceability tag: `/// @trace BENCH-001` (per README).
-
-## Commit & branch convention
-
-- Conventional Commits.
-- Branch: `<type>/<topic>`.
-
-## Agent guardrails
-
-- Benchmark results are non-deterministic — never assert exact numbers in tests; use criterion's regression detection.
-- Keep `benches/` runnable on stable Rust; do not gate benchmarks on nightly-only features.
+## References
+- Parent workspace: /Users/kooshapari/CodeProjects/Phenotype/repos/CLAUDE.md
