@@ -1,4 +1,4 @@
-# Benchora
+# gauge
 
 **Benchmarking and performance testing framework** — Rust-based benchmarking suite for the Phenotype ecosystem.
 
