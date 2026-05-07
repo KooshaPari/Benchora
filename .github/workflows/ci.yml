@@ -17,6 +17,7 @@ concurrency:
 jobs:
   ci:
     name: Rust CI
+    timeout-minutes: 30
     uses: KooshaPari/template-commons/.github/workflows/reusable-rust-ci.yml@main
     with:
       rust-version: stable
@@ -24,6 +25,7 @@ jobs:
 
   security:
     name: Security Audit
+    timeout-minutes: 20
     uses: KooshaPari/template-commons/.github/workflows/reusable-security-scan.yml@main
     with:
       language: rust
@@ -32,4 +34,5 @@ jobs:
 
   phenotype-validate:
     name: Governance Validation
+    timeout-minutes: 10
     uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@main
