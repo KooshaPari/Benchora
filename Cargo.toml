@@ -27,3 +27,6 @@ name = "my_benchmark"
 harness = false
 
 [workspace]
+[workspace.package]
+
+rust-version = "1.75"
