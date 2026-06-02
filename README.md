@@ -1,3 +1,6 @@
+> **Work state:** SCAFFOLD · **Progress:** `███░░░░░░░ 30%`
+> Rust benchmarking framework (gauge); scaffold + bench harness, pre-1.0 · updated 2026-06-02
+
 # gauge
 
 **Benchmarking and performance testing framework** — Rust-based benchmarking suite for the Phenotype ecosystem.
