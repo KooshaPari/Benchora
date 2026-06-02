@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,14 +18,16 @@ concurrency:
 jobs:
   ci:
     name: Rust CI
-    uses: KooshaPari/template-commons/.github/workflows/reusable-rust-ci.yml@main
+    timeout-minutes: 30
+    uses: KooshaPari/template-commons/.github/workflows/reusable-rust-ci.yml@48772d7560c964fff01a209742429f24283e96cf
     with:
       rust-version: stable
       enable-coverage: true
 
   security:
     name: Security Audit
-    uses: KooshaPari/template-commons/.github/workflows/reusable-security-scan.yml@main
+    timeout-minutes: 20
+    uses: KooshaPari/template-commons/.github/workflows/reusable-security-scan.yml@48772d7560c964fff01a209742429f24283e96cf
     with:
       language: rust
     secrets:
@@ -32,4 +35,5 @@ jobs:
 
   phenotype-validate:
     name: Governance Validation
-    uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@main
+    timeout-minutes: 10
+    uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@48772d7560c964fff01a209742429f24283e96cf

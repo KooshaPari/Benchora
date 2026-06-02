@@ -1,4 +1,8 @@
 name: CodeQL
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 on:
   push:
@@ -12,9 +16,11 @@ permissions:
   contents: read
   security-events: write
   actions: read
+  actions: read
 
 jobs:
   analyze:
+    timeout-minutes: 20
     uses: KooshaPari/phenoShared/.github/workflows/reusable/codeql.yml@30358ce629168f0e1ec3699706cb73d1f77cb751
     permissions:
       contents: read
