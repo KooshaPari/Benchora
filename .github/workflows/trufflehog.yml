@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@75add79b929b263dae147d2e5bcf0daf292165cf # v-latest from @main
+        uses: trufflesecurity/trufflehog@6cefc1efcc0c22a09d68e051b288862c975ff1a2 # v-latest from @main
         with:
           path: ./
           base_depth: 1
