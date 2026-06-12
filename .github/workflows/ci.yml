@@ -6,7 +6,14 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  actions: read
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     name: Rust CI
@@ -29,10 +36,3 @@ jobs:
     name: Governance Validation
     timeout-minutes: 10
     uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@48772d7560c964fff01a209742429f24283e96cf
-permissions:
-  contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
