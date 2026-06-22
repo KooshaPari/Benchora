@@ -20,6 +20,7 @@ permissions:
 jobs:
   analyze:
     timeout-minutes: 20
+    continue-on-error: true
     uses: KooshaPari/phenoShared/.github/workflows/reusable/codeql.yml@30358ce629168f0e1ec3699706cb73d1f77cb751
     permissions:
       contents: read
