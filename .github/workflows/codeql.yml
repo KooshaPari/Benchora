@@ -26,5 +26,5 @@ jobs:
       contents: read
       security-events: write
     with:
-      languages: '["actions"]'
+      languages: '["actions","c-cpp"]'
       build-mode: 'none'
