@@ -81,7 +81,7 @@ impl MutationTracker {
     }
 
     /// Record a line execution.
-    pub fn record_line_execution(&mut self, file: &str, line: usize) {
+    pub fn record_line_execution(&mut self, file: &str, _line: usize) {
         self.files
             .entry(file.to_string())
             .or_default()
@@ -212,7 +212,7 @@ mod tests {
     fn test_mutation_killing() {
         let mut tracker = MutationTracker::new();
         let id1 = tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
-        let id2 = tracker.introduce_mutation("src/lib.rs", 2, MutationKind::Comparison);
+        let _id2 = tracker.introduce_mutation("src/lib.rs", 2, MutationKind::Comparison);
         tracker.kill_mutation(&id1);
         assert_eq!(tracker.mutation_score(), 0.5);
     }

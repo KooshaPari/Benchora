@@ -45,8 +45,7 @@
 //! verifier.verify::<MemoryStorage>();
 //! ```
 
-use crate::domain::{XddError, XddResult};
-use async_trait::async_trait;
+use crate::domain::XddResult;
 
 /// Contract trait - defines the interface that adapters must implement.
 ///
@@ -148,7 +147,7 @@ impl ContractVerifier {
         &mut self,
         expected: T,
         actual: T,
-        msg: &str,
+        _msg: &str,
     ) {
         self.assertions += 1;
         if expected != actual {

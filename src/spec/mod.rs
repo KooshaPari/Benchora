@@ -107,34 +107,24 @@ pub struct Requirement {
     pub status: Status,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Priority {
     Critical,
     High,
+    #[default]
     Medium,
     Low,
 }
 
-impl Default for Priority {
-    fn default() -> Self {
-        Priority::Medium
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
+    #[default]
     Pending,
     Implemented,
     Verified,
     Deferred,
-}
-
-impl Default for Status {
-    fn default() -> Self {
-        Status::Pending
-    }
 }
 
 /// Parsed and validated specification.
