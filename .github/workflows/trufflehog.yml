@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@afbdaa87d92085e0755bd00122d8e14ad0007692 # v-latest from @main
+        uses: trufflesecurity/trufflehog@092db2aa9d836cdc0bb2c9fcc93435d026e14d0c # v-latest from @main
         continue-on-error: true
         with:
           path: ./
