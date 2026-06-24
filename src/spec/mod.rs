@@ -23,14 +23,27 @@
 //! ## Usage
 //!
 //! ```rust
-//! use phenotype_xdd_lib::spec::{Spec, SpecParser};
+//! use gauge::spec::SpecParser;
 //!
-//! let spec = SpecParser::parse_yaml(yaml_str)?;
-//! spec.validate()?;
+//! let yaml_str = r#"
+//! spec:
+//!   name: User Authentication
+//!   version: 1.0.0
+//!   features:
+//!     - id: AUTH-001
+//!       name: Login
+//!       scenario:
+//!         given: valid credentials
+//!         when: user submits login form
+//!         then: redirect to dashboard
+//! "#;
+//!
+//! let spec = SpecParser::parse(yaml_str)?;
+//! # Ok::<(), gauge::domain::XddError>(())
 //! ```
 
-use serde::{Deserialize, Serialize};
 use crate::domain::{XddError, XddResult};
+use serde::{Deserialize, Serialize};
 
 pub use parser::SpecParser;
 pub use validator::SpecValidator;
@@ -133,9 +146,8 @@ pub mod parser {
 
     /// Parse specification from YAML string.
     pub fn parse_yaml(yaml: &str) -> XddResult<Spec> {
-        serde_yaml::from_str(yaml).map_err(|e| {
-            XddError::spec(format!("Failed to parse YAML: {}", e))
-        })
+        serde_yaml::from_str(yaml)
+            .map_err(|e| XddError::spec(format!("Failed to parse YAML: {}", e)))
     }
 
     /// SpecParser with validation.
@@ -188,10 +200,12 @@ pub mod validator {
 
         fn validate_metadata(&mut self, meta: &SpecMetadata) {
             if meta.name.is_empty() {
-                self.errors.push(XddError::spec("Spec name cannot be empty"));
+                self.errors
+                    .push(XddError::spec("Spec name cannot be empty"));
             }
             if meta.version.is_empty() {
-                self.errors.push(XddError::spec("Spec version cannot be empty"));
+                self.errors
+                    .push(XddError::spec("Spec version cannot be empty"));
             }
         }
 
@@ -200,19 +214,23 @@ pub mod validator {
             for feature in features {
                 if !seen_ids.insert(&feature.id) {
                     self.errors.push(XddError::spec(format!(
-                        "Duplicate feature ID: {}", feature.id
+                        "Duplicate feature ID: {}",
+                        feature.id
                     )));
                 }
                 if feature.name.is_empty() {
-                    self.errors.push(XddError::spec("Feature name cannot be empty"));
+                    self.errors
+                        .push(XddError::spec("Feature name cannot be empty"));
                 }
                 // Either scenario or given/when/then should be present
-                if feature.scenario.is_none() &&
-                   feature.given.is_empty() &&
-                   feature.when.is_empty() &&
-                   feature.then.is_empty() {
+                if feature.scenario.is_none()
+                    && feature.given.is_empty()
+                    && feature.when.is_empty()
+                    && feature.then.is_empty()
+                {
                     self.errors.push(XddError::spec(format!(
-                        "Feature {} has no scenario or given/when/then", feature.id
+                        "Feature {} has no scenario or given/when/then",
+                        feature.id
                     )));
                 }
             }
@@ -223,11 +241,13 @@ pub mod validator {
             for req in requirements {
                 if !seen_ids.insert(&req.id) {
                     self.errors.push(XddError::spec(format!(
-                        "Duplicate requirement ID: {}", req.id
+                        "Duplicate requirement ID: {}",
+                        req.id
                     )));
                 }
                 if req.description.is_empty() {
-                    self.errors.push(XddError::spec("Requirement description cannot be empty"));
+                    self.errors
+                        .push(XddError::spec("Requirement description cannot be empty"));
                 }
             }
         }
