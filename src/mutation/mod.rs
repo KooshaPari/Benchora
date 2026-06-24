@@ -20,14 +20,14 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Mutation coverage tracker.
 #[derive(Debug, Default, Clone)]
 pub struct MutationTracker {
-    /// File execution counts.
+    /// File execution state, keyed by file path.
     files: HashMap<String, FileCoverage>,
-    /// Total mutations introduced.
+    /// Total mutations introduced (excludes equivalents).
     total_mutations: usize,
     /// Mutations killed by tests.
     killed_mutations: usize,
@@ -35,7 +35,10 @@ pub struct MutationTracker {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 struct FileCoverage {
-    lines_executed: usize,
+    /// Distinct line numbers that were executed (NOT a counter).
+    /// Tracking a HashSet is required so repeated execution of the
+    /// same line does not inflate coverage past 100%.
+    lines_seen: HashSet<usize>,
     /// Total lines of code in the file (set via `record_file_loc` or
     /// derived from `max_line_seen` if the caller never supplied it).
     #[serde(default)]
@@ -43,7 +46,9 @@ struct FileCoverage {
     /// Highest line number passed to `record_line_execution`.
     #[serde(default)]
     max_line_seen: usize,
-    branches_executed: usize,
+    /// Distinct branch IDs that were executed (each branch counted once).
+    #[serde(default)]
+    branches_seen: HashSet<String>,
     mutations: Vec<Mutation>,
 }
 
@@ -102,18 +107,28 @@ impl MutationTracker {
 
     /// Record a line execution.
     ///
-    /// `total_loc` should be the total lines of code in `file`. The coverage
-    /// calculation divides lines_executed by total_loc, so the caller must
-    /// supply the canonical LOC count for the file (e.g. via `walkdir` +
-    /// `std::fs::read_to_string` at instrumentation time).
+    /// Lines are tracked as a set so repeated execution of the same line
+    /// does NOT inflate coverage past 100%. `total_loc` should be the
+    /// total lines of code in `file`; the coverage calculation divides
+    /// `lines_seen.len()` by `total_loc`.
     pub fn record_line_execution(&mut self, file: &str, line: usize) {
         let entry = self.files.entry(file.to_string()).or_default();
-        entry.lines_executed += 1;
+        entry.lines_seen.insert(line);
         // Track the highest line we have seen so the per-file total can be
         // derived when the caller does not supply a LOC count up front.
         if line > entry.max_line_seen {
             entry.max_line_seen = line;
         }
+    }
+
+    /// Record a branch execution by stable identifier.
+    ///
+    /// Like `record_line_execution`, this is set-based — repeated
+    /// execution of the same branch does not inflate branch coverage.
+    pub fn record_branch_execution(&mut self, file: &str, branch_id: &str) {
+        let entry = self.files.entry(file.to_string()).or_default();
+        entry.branches_seen.insert(branch_id.to_string());
+        let _ = file;
     }
 
     /// Record a file's total LOC up front (preferred for accurate coverage).
@@ -164,11 +179,17 @@ impl MutationTracker {
     }
 
     /// Calculate mutation score (0.0 to 1.0).
-    pub fn mutation_score(&self) -> f64 {
+    ///
+    /// When no mutations have been introduced yet (an empty / pristine
+    /// tracker), the function returns `None` rather than `1.0`. Reporting
+    /// a perfect mutation score for an empty run would be misleading —
+    /// a real, meaningful score requires at least one mutation.
+    pub fn mutation_score(&self) -> Option<f64> {
         if self.total_mutations == 0 {
-            return 1.0;
+            None
+        } else {
+            Some(self.killed_mutations as f64 / self.total_mutations as f64)
         }
-        self.killed_mutations as f64 / self.total_mutations as f64
     }
 
     /// Get coverage percentage for a file (0.0..=1.0).
@@ -176,6 +197,9 @@ impl MutationTracker {
     /// When the file's LOC was never recorded via `record_file_loc`, the
     /// highest line number seen is used as the denominator. If nothing
     /// was ever executed for the file, returns 0.0.
+    ///
+    /// Coverage is clamped to `[0.0, 1.0]` — a value of 1.0 means every
+    /// tracked line was executed at least once.
     pub fn coverage(&self, file: &str) -> f64 {
         self.files
             .get(file)
@@ -184,15 +208,29 @@ impl MutationTracker {
                 if total == 0 {
                     0.0
                 } else {
-                    f.lines_executed.min(total) as f64 / total as f64
+                    let hit = f.lines_seen.len().min(total);
+                    hit as f64 / total as f64
                 }
             })
             .unwrap_or(0.0)
     }
 
+    /// Get branch coverage percentage for a file (0.0..=1.0).
+    ///
+    /// Returns 0.0 when no branch executions have been recorded.
+    pub fn branch_coverage(&self, file: &str, total_branches: usize) -> f64 {
+        if total_branches == 0 {
+            return 0.0;
+        }
+        self.files
+            .get(file)
+            .map(|f| (f.branches_seen.len().min(total_branches)) as f64 / total_branches as f64)
+            .unwrap_or(0.0)
+    }
+
     /// Get all tracked files.
     pub fn files(&self) -> impl Iterator<Item = (&str, usize)> {
-        self.files.iter().map(|(k, v)| (k.as_str(), v.lines_executed))
+        self.files.iter().map(|(k, v)| (k.as_str(), v.lines_seen.len()))
     }
 }
 

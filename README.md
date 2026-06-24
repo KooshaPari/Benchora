@@ -19,16 +19,16 @@
 > human operator. Bug reports and contributions are still welcome, but please
 > expect AI-generated code, comments, and documentation throughout.
 <!-- AI-DD-META:END -->
-> **Work state:** SCAFFOLD · **Progress:** `███░░░░░░░ 30%`
-> Rust benchmarking framework (**Benchora**); scaffold + bench harness, pre-1.0 · updated 2026-06-23
+> **Work state:** ACTIVE · **Progress:** `████████░░ 80%`
+> Rust benchmarking + xDD testing framework (**Benchora**); CLI, baseline store, mutation coverage, multi-suite benches · updated 2026-06-23
 
 # Benchora
 
 ## State
 
-Progress: `[███░░░░░░░] 30%` — pre-1.0 Rust benchmarking scaffold.
+Progress: `[████████░░] 80%` — Rust benchmarking + xDD testing framework, **CLI ready**, mutation coverage math audited.
 
-_Updated 2026-06-08 — audit pass._
+_Updated 2026-06-23 — DAG-002 mutation-math fix landed; coverage is now set-based; mutation score returns `None` for empty trackers._
 
 [![CI](https://github.com/KooshaPari/Benchora/actions/workflows/ci.yml/badge.svg)](https://github.com/KooshaPari/Benchora/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -41,10 +41,17 @@ Benchora provides performance benchmarking, load testing, and metrics collection
 
 ## Key Features
 
-- Rust benchmarking with criterion
-- Load testing utilities
-- Performance regression tracking
-- Metrics collection and reporting
+- **Criterion-based bench harness** (`my_benchmark`, `phenotype_xdd_lib_bench`)
+- **`benchora` CLI** with five subcommands: `run`, `report`, `baseline`, `compare`, `list`
+- **SQLite-backed baseline store** with sha256-pinned integrity hashes
+- **Regression detection** — 5 % threshold surfaces as non-zero exit for CI gates
+- **Mutation testing coverage** with set-based line + branch tracking (no double-counting)
+- **xDD utilities** — property strategies (`valid_uuid`, `valid_email`, `bounded_int`, …), contract verifier, spec parser/validator
+- **Reusable as a library** — `phenotype_xdd_lib` exposes the modules; CLI is a thin wrapper
+
+## Mutation-coverage guarantees
+
+`MutationTracker::coverage` and `MutationTracker::branch_coverage` divide **distinct** lines/branches hit by the file's effective LOC. Repeated execution of the same line cannot inflate coverage past 100 %. `MutationTracker::mutation_score` returns `Option<f64>` — `None` for empty trackers, `Some(ratio)` otherwise — so callers cannot accidentally report a perfect score on a pristine run.
 
 ## Quick Start
 
@@ -53,12 +60,21 @@ Benchora provides performance benchmarking, load testing, and metrics collection
 cd Benchora
 cargo build
 
-# Run benchmarks
-cargo bench
+# Run benchmarks (criterion standard harness)
+cargo bench --bench my_benchmark
+cargo bench --bench phenotype_xdd_lib_bench
 
-# Run tests
+# Run the full test suite (covers DAG-002 mutation-math regression)
 cargo test
+
+# Use the benchora CLI
+cargo run --release -- run     --suite my_benchmark --out ./reports
+cargo run --release -- baseline --from ./reports/my_benchmark-*.json nightly
+cargo run --release -- compare  --current ./reports/my_benchmark-*.json nightly
+cargo run --release -- list
 ```
+
+The `--db` flag (or `BENCHORA_DB` env var) points the CLI at a SQLite file for baselines + report metadata; default `./benchora.db`.
 
 ## Documentation
 
