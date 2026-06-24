@@ -5,7 +5,9 @@ source-commit: a1aa44660
 do-not-edit-locally: regenerate via scripts/propagate-intent-to-repos.py
                      or update in the source-of-truth registry repo
 -->
+
 ---
+
 repo: "Benchora"
 aliases: []
 role: unknown
@@ -15,22 +17,23 @@ bound_prompts: 4
 bound_plans: 0
 bound_responses: 0
 device: macbook
+
 ---
 
 # Intent — Benchora
 
 ## Intent Statement
 
-<To be filled in by hand from the most recent binding prompt. This repo is bound to 4 prompts, 0 plans, and 0 agent responses captured between 2025-08 and 2026-06-17.>
+`<To be filled in by hand from the most recent binding prompt. This repo is bound to 4 prompts, 0 plans, and 0 agent responses captured between 2025-08 and 2026-06-17.>`
 
 ## Bound Prompts
 
-| Date | Source | File | Tag |
-| ---- | ------ | ---- | --- |
-| ? | claude-code | `docs/curated-prompts/claude-code/unknown/aa81dc9132bcedba.md` | implementation |
-| ? | claude-code | `docs/curated-prompts/claude-code/unknown/f3414151f6ba70fe.md` | policy-setting |
-| ? | claude-code | `docs/curated-prompts/claude-code/unknown/9c70ba1ed573a07d.md` | bugfix |
-| ? | claude-code | `docs/curated-prompts/claude-code/unknown/56a8d491210091fd.md` | repo-defining |
+| Date | Source      | File                                                           | Tag            |
+| ---- | ----------- | -------------------------------------------------------------- | -------------- |
+| ?    | claude-code | `docs/curated-prompts/claude-code/unknown/aa81dc9132bcedba.md` | implementation |
+| ?    | claude-code | `docs/curated-prompts/claude-code/unknown/f3414151f6ba70fe.md` | policy-setting |
+| ?    | claude-code | `docs/curated-prompts/claude-code/unknown/9c70ba1ed573a07d.md` | bugfix         |
+| ?    | claude-code | `docs/curated-prompts/claude-code/unknown/56a8d491210091fd.md` | repo-defining  |
 
 ## Bound Plans
 
@@ -48,14 +51,14 @@ See: [`docs/boundary/Benchora.md`](../boundary/Benchora.md)
 
 ## Ecosystem Role
 
-<See `ECOSYSTEM_MAP.md` for the canonical ecosystem role.>
+`<See ECOSYSTEM_MAP.md for the canonical ecosystem role.>`
 
 ## Open Questions
 
-- <To be filled from the latest prompt on this repo.>
+- `<To be filled from the latest prompt on this repo.>`
 
 ## Change Log
 
-| Date | Change | Worklog |
-| ---- | ------ | ------- |
+| Date       | Change                         | Worklog                                                    |
+| ---------- | ------------------------------ | ---------------------------------------------------------- |
 | 2026-06-17 | Initial binding (L7-001 sweep) | `worklogs/L7-001-intent-boundary-curation-2026-06-17.json` |
