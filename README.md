@@ -87,3 +87,4 @@ PRs welcome. See `CONTRIBUTING.md`. New bench harnesses follow the existing `cri
 ## License
 
 Proprietary — Phenotype Ecosystem. Internal use only. (Replace with `MIT — see ./LICENSE` once the LICENSE file is committed.)
+ 
