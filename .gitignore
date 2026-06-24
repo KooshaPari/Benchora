@@ -17,6 +17,10 @@ Thumbs.db
 
 # Logs
 *.log
+_*.txt
+_*.json
+_*.py
+_*.md
 
 # Repo-specific lines preserved from prior .gitignore:
 Cargo.lock
