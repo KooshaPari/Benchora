@@ -136,16 +136,23 @@ impl MutationTracker {
     }
 
     /// Get coverage percentage for a file.
+    ///
+    /// Returns `0.0` until total source LOC is tracked (see the
+    /// `// TODO: actual LOC` note). When `lines_executed` is recorded without
+    /// a known file size, coverage is intentionally reported as `0.0` rather
+    /// than a misleadingly precise fraction.
     pub fn coverage(&self, file: &str) -> f64 {
         self.files
             .get(file)
-            .map(|f| f.lines_executed as f64 / 100.0) // TODO: actual LOC
+            .map(|_| 0.0) // TODO: actual LOC
             .unwrap_or(0.0)
     }
 
     /// Get all tracked files.
     pub fn files(&self) -> impl Iterator<Item = (&str, usize)> {
-        self.files.iter().map(|(k, v)| (k.as_str(), v.lines_executed))
+        self.files
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.lines_executed))
     }
 }
 

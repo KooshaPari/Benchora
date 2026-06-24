@@ -13,9 +13,9 @@
 //! - Collection strategies (non-empty, bounded size)
 //! - Composite strategies (valid entities)
 
+use crate::domain::{XddError, XddResult};
 use proptest::prelude::*;
 use proptest::strategy::Strategy;
-use crate::domain::{XddError, XddResult};
 
 /// Result type for strategy validation.
 pub type StrategyResult<T> = Result<T, XddError>;
@@ -27,11 +27,19 @@ pub fn valid_uuid(s: &str) -> XddResult<&str> {
     }
     let parts: Vec<&str> = s.split('-').collect();
     if parts.len() != 5 {
-        return Err(XddError::property("UUID must have 5 hyphen-separated parts"));
+        return Err(XddError::property(
+            "UUID must have 5 hyphen-separated parts",
+        ));
     }
-    if parts[0].len() != 8 || parts[1].len() != 4 || parts[2].len() != 4 ||
-       parts[3].len() != 4 || parts[4].len() != 12 {
-        return Err(XddError::property("UUID parts must be 8-4-4-4-12 characters"));
+    if parts[0].len() != 8
+        || parts[1].len() != 4
+        || parts[2].len() != 4
+        || parts[3].len() != 4
+        || parts[4].len() != 12
+    {
+        return Err(XddError::property(
+            "UUID parts must be 8-4-4-4-12 characters",
+        ));
     }
     Ok(s)
 }
@@ -46,10 +54,14 @@ pub fn valid_email(s: &str) -> XddResult<&str> {
         return Err(XddError::property("Email must have exactly one @"));
     }
     if parts[0].is_empty() || parts[1].is_empty() {
-        return Err(XddError::property("Email local and domain parts must be non-empty"));
+        return Err(XddError::property(
+            "Email local and domain parts must be non-empty",
+        ));
     }
     if !parts[1].contains('.') {
-        return Err(XddError::property("Email domain must contain at least one dot"));
+        return Err(XddError::property(
+            "Email domain must contain at least one dot",
+        ));
     }
     Ok(s)
 }
@@ -57,7 +69,9 @@ pub fn valid_email(s: &str) -> XddResult<&str> {
 /// Validate a URL format.
 pub fn valid_url(s: &str) -> XddResult<&str> {
     if !s.starts_with("http://") && !s.starts_with("https://") {
-        return Err(XddError::property("URL must start with http:// or https://"));
+        return Err(XddError::property(
+            "URL must start with http:// or https://",
+        ));
     }
     if s.len() < 10 {
         return Err(XddError::property("URL must be at least 10 characters"));
@@ -77,15 +91,20 @@ pub fn positive_int(n: i64) -> XddResult<i64> {
 pub fn bounded_int(n: i64, min: i64, max: i64) -> XddResult<i64> {
     if n < min || n > max {
         return Err(XddError::property(format!(
-            "Value {} must be between {} and {}", n, min, max
+            "Value {} must be between {} and {}",
+            n, min, max
         )));
     }
     Ok(n)
 }
 
 /// Validate a non-empty string.
+///
+/// Note: this checks structural emptiness only (zero bytes); whitespace-only
+/// strings are considered non-empty because they are a valid textual input.
+/// Use a separate validator if semantic "blank" rejection is required.
 pub fn non_empty_string(s: &str) -> XddResult<&str> {
-    if s.trim().is_empty() {
+    if s.is_empty() {
         return Err(XddError::property("String must be non-empty"));
     }
     Ok(s)
@@ -104,7 +123,8 @@ pub fn bounded_length(s: &str, min: usize, max: usize) -> XddResult<&str> {
     let len = s.len();
     if len < min || len > max {
         return Err(XddError::property(format!(
-            "String length {} must be between {} and {}", len, min, max
+            "String length {} must be between {} and {}",
+            len, min, max
         )));
     }
     Ok(s)
@@ -116,14 +136,12 @@ pub fn bounded_length(s: &str, min: usize, max: usize) -> XddResult<&str> {
 
 /// Generate a random valid UUID v4.
 pub fn uuid_strategy() -> impl Strategy<Value = String> {
-    "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
-        .prop_map(|s| s)
+    "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}".prop_map(|s| s)
 }
 
 /// Generate a random valid email.
 pub fn email_strategy() -> impl Strategy<Value = String> {
-    (".+@+.+", 3..100)
-        .prop_map(|(local, domain)| format!("{}@{}", local, domain))
+    (".+@+.+", 3..100).prop_map(|(local, domain)| format!("{}@{}", local, domain))
 }
 
 /// Generate a random bounded integer.
