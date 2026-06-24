@@ -20,9 +20,9 @@
 > expect AI-generated code, comments, and documentation throughout.
 <!-- AI-DD-META:END -->
 > **Work state:** SCAFFOLD · **Progress:** `███░░░░░░░ 30%`
-> Rust benchmarking framework (gauge); scaffold + bench harness, pre-1.0 · updated 2026-06-02
+> Rust benchmarking framework (**Benchora**); scaffold + bench harness, pre-1.0 · updated 2026-06-23
 
-# gauge
+# Benchora
 
 ## State
 
@@ -31,7 +31,7 @@ Progress: `[███░░░░░░░] 30%` — pre-1.0 Rust benchmarking s
 _Updated 2026-06-08 — audit pass._
 
 [![CI](https://github.com/KooshaPari/Benchora/actions/workflows/ci.yml/badge.svg)](https://github.com/KooshaPari/Benchora/actions)
-[![License](https://img.shields.io/badge/license-Proprietary-lightgrey)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **Benchmarking and performance testing framework** — Rust-based benchmarking suite for the Phenotype ecosystem.
 
@@ -70,11 +70,23 @@ cargo test
 
 ## Description
 
-Rust benchmarking framework (`gauge`) for the Phenotype ecosystem — criterion-based bench harness, load testing, and performance regression tracking.
+Rust benchmarking framework (**Benchora**) for the Phenotype ecosystem — criterion-based bench harness, SQLite-backed report + baseline store, sha256-pinned regression tracking, and the `benchora` CLI (`run | report | baseline | compare | list`).
+
+## CLI
+
+The `benchora` binary is the entry point. Five subcommands:
+
+- `benchora run --suite <name> --out <report.json>` — execute a bench suite and write a report
+- `benchora report <report.json>` — summarize a report to stdout
+- `benchora baseline --from <report.json> <name>` — promote a report to a named baseline (sha256-pinned)
+- `benchora compare --current <report.json> <baseline>` — diff a report against a baseline
+- `benchora list [reports|baselines]` — list stored entries in the SQLite state DB
+
+The state DB is configured via `--db <path>` (default `./benchora.db`).
 
 ## Install
 
-`cargo build` (adds `cargo-bench` harness). Requires a recent stable Rust toolchain (see `rust-toolchain.toml`).
+`cargo build --release` (adds the `benchora` binary to `target/release/`) or `cargo install --path .` for a stable install. Requires Rust 1.75+ (see `rust-toolchain.toml`).
 
 ## Usage
 
@@ -86,4 +98,4 @@ PRs welcome. See `CONTRIBUTING.md`. New bench harnesses follow the existing `cri
 
 ## License
 
-Proprietary — Phenotype Ecosystem. Internal use only. (Replace with `MIT — see ./LICENSE` once the LICENSE file is committed.)
+MIT — see [`LICENSE`](./LICENSE).
