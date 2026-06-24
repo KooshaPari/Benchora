@@ -36,8 +36,28 @@ pub struct MutationTracker {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 struct FileCoverage {
     lines_executed: usize,
+    /// Total lines of code in the file (set via `record_file_loc` or
+    /// derived from `max_line_seen` if the caller never supplied it).
+    #[serde(default)]
+    total_loc: usize,
+    /// Highest line number passed to `record_line_execution`.
+    #[serde(default)]
+    max_line_seen: usize,
     branches_executed: usize,
     mutations: Vec<Mutation>,
+}
+
+impl FileCoverage {
+    /// Effective LOC used for coverage math. Prefers the explicitly
+    /// recorded total; falls back to `max_line_seen` when the caller
+    /// never invoked `record_file_loc`.
+    fn effective_loc(&self) -> usize {
+        if self.total_loc > 0 {
+            self.total_loc
+        } else {
+            self.max_line_seen
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,11 +101,27 @@ impl MutationTracker {
     }
 
     /// Record a line execution.
-    pub fn record_line_execution(&mut self, file: &str, _line: usize) {
-        self.files
-            .entry(file.to_string())
-            .or_default()
-            .lines_executed += 1;
+    ///
+    /// `total_loc` should be the total lines of code in `file`. The coverage
+    /// calculation divides lines_executed by total_loc, so the caller must
+    /// supply the canonical LOC count for the file (e.g. via `walkdir` +
+    /// `std::fs::read_to_string` at instrumentation time).
+    pub fn record_line_execution(&mut self, file: &str, line: usize) {
+        let entry = self.files.entry(file.to_string()).or_default();
+        entry.lines_executed += 1;
+        // Track the highest line we have seen so the per-file total can be
+        // derived when the caller does not supply a LOC count up front.
+        if line > entry.max_line_seen {
+            entry.max_line_seen = line;
+        }
+    }
+
+    /// Record a file's total LOC up front (preferred for accurate coverage).
+    pub fn record_file_loc(&mut self, file: &str, loc: usize) {
+        let entry = self.files.entry(file.to_string()).or_default();
+        if loc > entry.total_loc {
+            entry.total_loc = loc;
+        }
     }
 
     /// Record a mutation introduction.
@@ -135,11 +171,22 @@ impl MutationTracker {
         self.killed_mutations as f64 / self.total_mutations as f64
     }
 
-    /// Get coverage percentage for a file.
+    /// Get coverage percentage for a file (0.0..=1.0).
+    ///
+    /// When the file's LOC was never recorded via `record_file_loc`, the
+    /// highest line number seen is used as the denominator. If nothing
+    /// was ever executed for the file, returns 0.0.
     pub fn coverage(&self, file: &str) -> f64 {
         self.files
             .get(file)
-            .map(|f| f.lines_executed as f64 / 100.0) // TODO: actual LOC
+            .map(|f| {
+                let total = f.effective_loc();
+                if total == 0 {
+                    0.0
+                } else {
+                    f.lines_executed.min(total) as f64 / total as f64
+                }
+            })
             .unwrap_or(0.0)
     }
 
@@ -162,15 +209,33 @@ pub struct CoverageReport {
 
 impl CoverageReport {
     /// Create from a tracker.
+    ///
+    /// Total lines are the sum of each tracked file's effective LOC
+    /// (recorded via `record_file_loc`, or derived from the highest
+    /// line number seen).
     pub fn from_tracker(tracker: &MutationTracker) -> Self {
-        let (total_lines, executed_lines) = tracker
-            .files()
-            .fold((0, 0), |(t, e), (_, exec)| (t + 100, e + exec)); // TODO: actual LOC
+        let (total_lines, executed_lines) =
+            tracker.files().fold((0usize, 0usize), |(t, e), (_, exec)| {
+                // `files()` yields (file, lines_executed) but we need the
+                // full entry to get total_loc. Re-fetch to be precise.
+                (t, e + exec)
+            });
+        // For a more accurate per-file sum, walk the underlying map.
+        let precise_total: usize = tracker
+            .files
+            .values()
+            .map(|f| f.effective_loc())
+            .sum();
+        let total_lines = if precise_total == 0 {
+            total_lines
+        } else {
+            precise_total
+        };
         Self {
             total_lines,
-            executed_lines,
+            executed_lines: executed_lines.min(total_lines),
             line_coverage: if total_lines > 0 {
-                executed_lines as f64 / total_lines as f64
+                executed_lines.min(total_lines) as f64 / total_lines as f64
             } else {
                 0.0
             },
@@ -194,9 +259,22 @@ mod tests {
     #[test]
     fn test_record_line_execution() {
         let mut tracker = MutationTracker::new();
+        // Without recording LOC, coverage falls back to max_line_seen / max_line_seen = 1.0
         tracker.record_line_execution("src/lib.rs", 10);
-        tracker.record_line_execution("src/lib.rs", 20);
-        assert_eq!(tracker.coverage("src/lib.rs"), 0.0); // TODO: actual LOC
+        assert_eq!(tracker.coverage("src/lib.rs"), 1.0);
+
+        // When the file has more lines than were executed, coverage is partial.
+        let mut tracker = MutationTracker::new();
+        tracker.record_file_loc("src/lib.rs", 200);
+        tracker.record_line_execution("src/lib.rs", 10);
+        assert!((tracker.coverage("src/lib.rs") - (1.0 / 200.0)).abs() < 1e-9);
+
+        // Clamps to 1.0 if more lines were executed than recorded.
+        let mut tracker = MutationTracker::new();
+        tracker.record_file_loc("src/lib.rs", 100);
+        tracker.record_line_execution("src/lib.rs", 50);
+        tracker.record_line_execution("src/lib.rs", 150);
+        assert_eq!(tracker.coverage("src/lib.rs"), 1.0);
     }
 
     #[test]

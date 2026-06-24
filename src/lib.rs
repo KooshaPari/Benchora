@@ -50,6 +50,7 @@ pub mod contract;
 pub mod mutation;
 pub mod spec;
 pub mod domain;
+pub mod cli;
 
 // Re-export commonly used items
 pub use domain::{XddError, XddResult};
