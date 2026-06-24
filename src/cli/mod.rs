@@ -75,6 +75,11 @@ pub enum Cmd {
         /// Path to the current report.
         #[arg(long)]
         current: PathBuf,
+        /// Override the regression threshold (percent) for this run.
+        /// Falls back to `BENCHORA_REGRESSION_THRESHOLD_PCT` env var,
+        /// then the DB, then 5.0.
+        #[arg(long, value_name = "PCT", env = "BENCHORA_REGRESSION_THRESHOLD_PCT")]
+        regression_threshold_pct: Option<f64>,
     },
     /// List stored baselines / reports.
     List {
@@ -96,7 +101,15 @@ pub fn run(cli: Cli) -> Result<(), CliError> {
         Cmd::Run { suite, out } => report::run_suite(&cli.db, &suite, out.as_deref()),
         Cmd::Report { path } => report::summarize(&path),
         Cmd::Baseline { name, from } => baseline::promote(&cli.db, &name, &from),
-        Cmd::Compare { baseline, current } => compare::diff(&cli.db, &baseline, &current),
+        Cmd::Compare { baseline, current, regression_threshold_pct } => {
+            // Per-invocation override takes precedence over env/DB/default.
+            if let Some(v) = regression_threshold_pct {
+                if v.is_finite() {
+                    std::env::set_var("BENCHORA_REGRESSION_THRESHOLD_PCT", v.to_string());
+                }
+            }
+            compare::diff(&cli.db, &baseline, &current)
+        },
         Cmd::List { kind } => match kind {
             ListKind::Baselines => baseline::list(&cli.db),
             ListKind::Reports => report::list(&cli.db),

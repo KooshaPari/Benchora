@@ -38,6 +38,10 @@ predicates = "3.0"
 name = "my_benchmark"
 harness = false
 
+[[bench]]
+name = "phenotype_xdd_lib_bench"
+harness = false
+
 [workspace.package]
 edition = "2021"
 rust-version = "1.75"

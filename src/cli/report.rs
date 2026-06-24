@@ -1,19 +1,30 @@
 //! Report storage + summary for Benchora.
+//!
+//! Wires the `benchora run` subcommand to actually execute criterion via
+//! `cargo bench --bench <name> -- --output-format bencher`. Criterion's
+//! "bencher" format emits one JSON object per benchmark on stdout, which
+//! we collect, wrap into the canonical Benchora report schema, and
+//! persist via the SQLite-backed reports table.
 
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
-use crate::cli::baseline::open_for_read;
+use crate::cli::baseline::{open_for_read, sha256_via_pub};
 use crate::cli::CliError;
 
 /// Run a benchmark suite and capture a JSON report to disk.
 ///
-/// This is a minimal scaffold: it does not yet invoke criterion. The
-/// intention is to wire it up in a follow-up DAG unit (`benchora-002`)
-/// after the suite registry is finalised. For now, it writes a stub
-/// report JSON describing what *would* be run, so the rest of the
-/// pipeline (storage, baseline, compare) can be exercised end-to-end.
+/// Implementation:
+/// 1. Resolve the suite name to a `cargo bench --bench <name>` invocation.
+/// 2. Pass `-- --output-format bencher` so criterion emits JSON on stdout.
+/// 3. Stream stdout line-by-line, parse each non-empty line as a
+///    `BencherEstimate`, and accumulate into `Vec<serde_json::Value>`.
+/// 4. Wrap the collected entries in the canonical `benchora.report.v1`
+///    envelope (suite, created_at, benchmarks, host metadata).
+/// 5. Write the envelope to `<out>` (or `<suite>-<timestamp>.json`).
+/// 6. Register the report in the SQLite `reports` table.
 pub fn run_suite(db: &Path, suite: &str, out: Option<&Path>) -> Result<(), CliError> {
-    let now = crate::cli::baseline::now_iso_via_pub();
+    let now = now_iso_string();
     let out_path: PathBuf = match out {
         Some(p) => p.to_path_buf(),
         None => {
@@ -21,13 +32,24 @@ pub fn run_suite(db: &Path, suite: &str, out: Option<&Path>) -> Result<(), CliEr
             PathBuf::from(format!("{}.json", stem))
         }
     };
+
+    let bench_name = resolve_bench_name(suite)?;
+    let entries = run_criterion_bencher(&bench_name)?;
+
     let body = serde_json::json!({
         "schema": "benchora.report.v1",
         "suite": suite,
         "created_at": now,
-        "benchmarks": [],
-        "note": "scaffold — bench execution is wired up in benchora-002",
+        "bench_name": bench_name,
+        "benchmarks": entries,
+        "host": host_metadata(),
+        "note": if entries.is_empty() {
+            Some("criterion produced no benchmarks — verify the bench file exports a criterion_group")
+        } else {
+            None
+        },
     });
+
     let pretty = serde_json::to_string_pretty(&body).map_err(|e| CliError::Json {
         path: out_path.clone(),
         source: e,
@@ -39,7 +61,7 @@ pub fn run_suite(db: &Path, suite: &str, out: Option<&Path>) -> Result<(), CliEr
 
     // Register in the reports table.
     let conn = open_for_read(db)?;
-    let sha = crate::cli::baseline::sha256_via_pub(&out_path)?;
+    let sha = sha256_via_pub(&out_path)?;
     conn.execute(
         r#"INSERT INTO reports(suite, report_path, sha256, created_at)
            VALUES(?,?,?,?)"#,
@@ -50,8 +72,95 @@ pub fn run_suite(db: &Path, suite: &str, out: Option<&Path>) -> Result<(), CliEr
         source: e,
     })?;
 
-    println!("wrote report {}", out_path.display());
+    println!(
+        "wrote report {} ({} benchmark entries)",
+        out_path.display(),
+        entries.len()
+    );
     Ok(())
+}
+
+/// Parse one criterion "bencher"-format JSON line.
+fn parse_bencher_line(line: &str) -> Option<serde_json::Value> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    serde_json::from_str(trimmed).ok()
+}
+
+/// Execute `cargo bench --bench <name> -- --output-format bencher` and
+/// collect benchmark entries from stdout.
+fn run_criterion_bencher(bench_name: &str) -> Result<Vec<serde_json::Value>, CliError> {
+    let mut cmd = Command::new("cargo");
+    cmd.args([
+        "bench",
+        "--bench",
+        bench_name,
+        "--",
+        "--output-format",
+        "bencher",
+    ]);
+    // Keep cargo quiet so the only stdout we parse is criterion's JSON.
+    cmd.env("CARGO_TERM_COLOR", "never");
+
+    let output = cmd.output().map_err(|e| CliError::Other(format!(
+        "failed to spawn `cargo bench --bench {}`: {} (is cargo on PATH?)",
+        bench_name, e
+    )))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(CliError::Other(format!(
+            "cargo bench exited with status {}: {}",
+            output.status, stderr
+        )));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let entries: Vec<serde_json::Value> = stdout
+        .lines()
+        .filter_map(parse_bencher_line)
+        .collect();
+    Ok(entries)
+}
+
+/// Map a suite name (e.g. `core`, `mutation`, `property`) to a bench
+/// file name. `property`, `contract`, and `spec` route to the rich
+/// `phenotype_xdd_lib_bench` harness; `core`, `mutation`, and the
+/// raw `my_benchmark` route to the smoke-test bench.
+fn resolve_bench_name(suite: &str) -> Result<String, CliError> {
+    match suite {
+        "property" | "contract" | "spec" => Ok("phenotype_xdd_lib_bench".to_string()),
+        "core" | "my_benchmark" | "mutation" => Ok("my_benchmark".to_string()),
+        other => Err(CliError::Other(format!(
+            "unknown suite '{}' — recognized: core, mutation, property, contract, spec",
+            other
+        ))),
+    }
+}
+
+/// Best-effort host metadata (target triple + cpu count) for the report.
+fn host_metadata() -> serde_json::Value {
+    let target = std::env::var("TARGET").unwrap_or_else(|_| {
+        // Cheap fallback: ask rustc.
+        Command::new("rustc")
+            .args(["-vV"])
+            .output()
+            .ok()
+            .and_then(|o| {
+                String::from_utf8(o.stdout).ok().and_then(|s| {
+                    s.lines()
+                        .find(|l| l.starts_with("host: "))
+                        .map(|l| l.trim_start_matches("host: ").to_string())
+                })
+            })
+            .unwrap_or_else(|| "<unknown>".into())
+    });
+    let cpus = std::thread::available_parallelism()
+        .map(|n| n.get() as u64)
+        .unwrap_or(1);
+    serde_json::json!({ "target": target, "cpus": cpus })
 }
 
 /// Summarize a saved report to stdout.
@@ -77,9 +186,14 @@ pub fn summarize(path: &Path) -> Result<(), CliError> {
         .and_then(|b| b.as_array())
         .map(|a| a.len())
         .unwrap_or(0);
+    let bench_name = v
+        .get("bench_name")
+        .and_then(|s| s.as_str())
+        .unwrap_or("<unknown>");
     println!("report: {}", path.display());
     println!("  suite      : {}", suite);
     println!("  created_at : {}", created);
+    println!("  bench_name : {}", bench_name);
     println!("  benchmarks : {}", count);
     Ok(())
 }
@@ -129,4 +243,56 @@ fn sanitize(s: &str) -> String {
     s.chars()
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
         .collect()
+}
+
+/// Local RFC3339-ish timestamp helper, kept private so we don't depend
+/// on the `cli::baseline::now_iso_via_pub` re-export ordering.
+fn now_iso_string() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let (y, mo, d, h, mi, s) = epoch_to_ymdhms(secs);
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+        y, mo, d, h, mi, s
+    )
+}
+
+fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {
+    let s = (secs % 60) as u32;
+    let m = ((secs / 60) % 60) as u32;
+    let h = ((secs / 3600) % 24) as u32;
+    let mut days = (secs / 86_400) as i64;
+    let mut year: i32 = 1970;
+    loop {
+        let leap = is_leap(year);
+        let in_year = if leap { 366 } else { 365 };
+        if days >= in_year {
+            days -= in_year;
+            year += 1;
+        } else {
+            break;
+        }
+    }
+    let mdays = if is_leap(year) {
+        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    } else {
+        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    };
+    let mut month = 1u32;
+    for &dm in &mdays {
+        if days >= dm as i64 {
+            days -= dm as i64;
+            month += 1;
+        } else {
+            break;
+        }
+    }
+    (year, month, (days as u32) + 1, h, m, s)
+}
+
+fn is_leap(y: i32) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
 }
