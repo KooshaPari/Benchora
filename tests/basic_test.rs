@@ -6,7 +6,7 @@ mod tests {
         // Real tests should be added as code is migrated
         assert_eq!(true, true);
     }
-    
+
     #[test]
     fn configuration_test() {
         // Test configuration

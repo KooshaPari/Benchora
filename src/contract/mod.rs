@@ -144,12 +144,7 @@ impl ContractVerifier {
     }
 
     /// Assert two values are equal.
-    pub fn assert_eq<T: PartialEq + std::fmt::Debug>(
-        &mut self,
-        expected: T,
-        actual: T,
-        msg: &str,
-    ) {
+    pub fn assert_eq<T: PartialEq + std::fmt::Debug>(&mut self, expected: T, actual: T, msg: &str) {
         self.assertions += 1;
         if expected != actual {
             self.failures.push(ContractFailure {
