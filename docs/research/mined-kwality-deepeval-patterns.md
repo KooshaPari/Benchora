@@ -11,13 +11,13 @@ kwality explored semantic test-quality evaluation (DeepEval), Playwright MCP bro
 
 kwality README migration path (canonical routing when agents ask for "kwality-like" features):
 
-| Need | Successor | Notes |
-|------|-----------|-------|
-| FR Traceability | **Benchora** | Production-grade FR coverage validation |
-| Test Quality | **phenotype-shared** | Testing utilities and fixtures |
-| Observability / graphs | **Tracera** + Neo4j | Production observability with knowledge graphs |
-| Browser Automation | **Playwright MCP** | Standalone MCP tool for browser testing |
-| LLM Evaluation | **cheap-llm-mcp** | Model routing and cost-sensitive eval |
+| Need                   | Successor            | Notes                                          |
+| ---------------------- | -------------------- | ---------------------------------------------- |
+| FR Traceability        | **Benchora**         | Production-grade FR coverage validation        |
+| Test Quality           | **phenotype-shared** | Testing utilities and fixtures                 |
+| Observability / graphs | **Tracera** + Neo4j  | Production observability with knowledge graphs |
+| Browser Automation     | **Playwright MCP**   | Standalone MCP tool for browser testing        |
+| LLM Evaluation         | **cheap-llm-mcp**    | Model routing and cost-sensitive eval          |
 
 **Adopt in Benchora:** link this table from Benchora README or ADR index as the tombstone entry for kwality FR-validation requests.
 
@@ -67,10 +67,10 @@ kwality shipped aspirational multi-service compose (DeepEval + Neo4j + Playwrigh
 
 ## Related fork-lane repos
 
-| Repo | Role |
-|------|------|
-| Tracera | Neo4j FR graph queries and traceability — [mined doc](https://github.com/KooshaPari/Tracera/blob/main/docs/research/mined-kwality-neo4j-fr-tracing.md) |
-| phenotype-journeys | Journey evidence complements semantic test eval |
+| Repo               | Role                                                                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tracera            | Neo4j FR graph queries and traceability — [mined doc](https://github.com/KooshaPari/Tracera/blob/main/docs/research/mined-kwality-neo4j-fr-tracing.md) |
+| phenotype-journeys | Journey evidence complements semantic test eval                                                                                                        |
 
 ## Provenance
 
