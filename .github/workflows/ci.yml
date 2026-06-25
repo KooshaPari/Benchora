@@ -14,19 +14,103 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  RUSTFLAGS: -D warnings
+
 jobs:
-  ci:
-    name: Rust CI
+  fmt:
+    name: rustfmt
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: rustfmt --check
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: clippy (gating)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Clippy (gating)
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Test (lenient — pre-existing TODO stubs)
-        run: cargo test --all
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test (lenient — pre-existing TODO stubs)
+        run: cargo test --all --locked
+        continue-on-error: true
+
+  build:
+    name: build (release)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo build --release --locked
+        run: cargo build --release --locked
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-deny
+        run: cargo install --locked cargo-deny
+      - name: cargo deny check (advisories + licenses + bans + sources)
+        run: |
+          cargo deny check advisories
+          cargo deny check licenses
+          cargo deny check bans
+          cargo deny check sources
+
+  machete:
+    name: cargo-machete (unused deps)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-machete
+        run: cargo install --locked cargo-machete
+      - name: cargo machete (with-fix suggested)
+        run: |
+          echo "== run: cargo machete =="
+          cargo machete --with-metadata || true
+          echo "== done =="
+
+  audit:
+    name: RustSec audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install --locked cargo-audit --features=fix
+      - name: Audit (informational; gating done in `deny`)
+        run: cargo audit
         continue-on-error: true
