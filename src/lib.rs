@@ -42,17 +42,17 @@
 //! ```rust
 //! use phenotype_xdd_lib::property::strategies::valid_uuid;
 //!
-//! proptest::prop_assert!(valid_uuid("550e8400-e29b-41d4-a716-446655440000").is_ok());
+//! assert!(valid_uuid("550e8400-e29b-41d4-a716-446655440000").is_ok());
 //! ```
 
-pub mod property;
-pub mod contract;
-pub mod mutation;
-pub mod spec;
-pub mod domain;
 pub mod cli;
+pub mod contract;
+pub mod domain;
+pub mod mutation;
+pub mod property;
+pub mod spec;
 
 // Re-export commonly used items
+pub use contract::{Contract, ContractVerifier};
 pub use domain::{XddError, XddResult};
 pub use property::strategies;
-pub use contract::{Contract, ContractVerifier};

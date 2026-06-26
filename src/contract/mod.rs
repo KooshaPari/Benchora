@@ -29,24 +29,18 @@
 //! ## Usage
 //!
 //! ```rust
-//! use gauge::contract::{Contract, ContractVerifier};
+//! use phenotype_xdd_lib::contract::{Contract, ContractVerifier};
 //!
-//! // Define a port (interface)
-//! trait StoragePort {
-//!     fn get(&self, key: &str) -> Option<String>;
-//!     fn set(&mut self, key: &str, value: String);
-//! }
-//!
-//! // Define a contract that verifies the adapter
 //! struct MemoryStorageContract;
 //!
 //! impl Contract for MemoryStorageContract {
 //!     fn name() -> &'static str { "MemoryStorage" }
-//!     fn verify() -> gauge::domain::XddResult<()> { Ok(()) }
+//!     fn verify() -> phenotype_xdd_lib::domain::XddResult<()> { Ok(()) }
 //! }
 //!
 //! let mut verifier = ContractVerifier::new();
-//! verifier.verify::<MemoryStorageContract>();
+//! verifier.verify::<MemoryStorageContract>()?;
+//! # Ok::<(), phenotype_xdd_lib::domain::XddError>(())
 //! ```
 
 use crate::domain::XddResult;
