@@ -7,7 +7,7 @@
 //!   cargo run --example basic_usage
 
 use phenotype_xdd_lib::contract::{Contract, ContractVerifier};
-use phenotype_xdd_lib::domain::XddResult;
+use phenotype_xdd_lib::domain::{XddError, XddResult};
 use phenotype_xdd_lib::property::strategies;
 
 /// EmailValidationContract — round-trips parse → format → re-parse and
@@ -15,20 +15,20 @@ use phenotype_xdd_lib::property::strategies;
 pub struct EmailValidationContract;
 
 impl Contract for EmailValidationContract {
-    type Input = String;
-    type Output = String;
-
-    fn name(&self) -> &'static str {
+    fn name() -> &'static str {
         "email_round_trip"
     }
 
-    fn verify(&self, input: &Self::Input) -> XddResult<Self::Output> {
+    fn verify() -> XddResult<()> {
+        let input = "Mixed.Case@Example.COM";
         if !input.contains('@') {
-            return Err(phenotype_xdd_lib::domain::XddError::InvalidInput(
-                "missing @".into(),
-            ));
+            return Err(XddError::contract("missing @"));
         }
-        Ok(input.to_lowercase())
+        let normalized = input.to_lowercase();
+        if normalized != "mixed.case@example.com" {
+            return Err(XddError::contract("unexpected normalization result"));
+        }
+        Ok(())
     }
 }
 
@@ -39,11 +39,9 @@ fn main() -> XddResult<()> {
     println!("parsed email: {valid}");
 
     // Contract: verify round-trip on a known-good sample.
-    let verifier = ContractVerifier::new(EmailValidationContract);
-    let sample = "Mixed.Case@Example.COM".to_string();
-    let normalized = verifier.check(&sample)?;
-    println!("normalized:   {normalized}");
-    assert_eq!(normalized, "mixed.case@example.com");
+    let mut verifier = ContractVerifier::new();
+    verifier.verify::<EmailValidationContract>()?;
+    println!("normalized:   mixed.case@example.com");
     println!("OK");
     Ok(())
 }

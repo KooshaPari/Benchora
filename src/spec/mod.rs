@@ -23,7 +23,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use gauge::spec::SpecParser;
+//! use phenotype_xdd_lib::spec::SpecParser;
 //!
 //! let yaml_str = r#"
 //! spec:
@@ -39,7 +39,7 @@
 //! "#;
 //!
 //! let spec = SpecParser::parse(yaml_str)?;
-//! # Ok::<(), gauge::domain::XddError>(())
+//! # Ok::<(), phenotype_xdd_lib::domain::XddError>(())
 //! ```
 
 use crate::domain::{XddError, XddResult};
