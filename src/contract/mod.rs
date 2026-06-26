@@ -29,7 +29,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use gauge::contract::{Contract, ContractVerifier};
+//! use phenotype_xdd_lib::contract::{Contract, ContractVerifier};
 //!
 //! // Define a port (interface)
 //! trait StoragePort {
@@ -42,7 +42,7 @@
 //!
 //! impl Contract for MemoryStorageContract {
 //!     fn name() -> &'static str { "MemoryStorage" }
-//!     fn verify() -> gauge::domain::XddResult<()> { Ok(()) }
+//!     fn verify() -> phenotype_xdd_lib::domain::XddResult<()> { Ok(()) }
 //! }
 //!
 //! let mut verifier = ContractVerifier::new();

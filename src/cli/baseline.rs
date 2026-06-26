@@ -127,13 +127,15 @@ pub fn list(db: &Path) -> Result<(), CliError> {
             path: db.to_path_buf(),
             source: e,
         })?;
-    println!("{:<24} {:<12} {:<14} {:<22} {}", "NAME", "SUITE", "SHA256-PREFIX", "CREATED", "PATH");
+    println!(
+        "{:<24} {:<12} {:<14} {:<22} PATH",
+        "NAME", "SUITE", "SHA256-PREFIX", "CREATED"
+    );
     for row in rows {
-        let (name, suite, sha, created, path) =
-            row.map_err(|e| CliError::Db {
-                path: db.to_path_buf(),
-                source: e,
-            })?;
+        let (name, suite, sha, created, path) = row.map_err(|e| CliError::Db {
+            path: db.to_path_buf(),
+            source: e,
+        })?;
         println!(
             "{:<24} {:<12} {:<14} {:<22} {}",
             name,
@@ -159,10 +161,7 @@ pub fn now_iso_via_pub() -> String {
         .unwrap_or(0);
     // Minimal RFC3339-ish: YYYY-MM-DDTHH:MM:SSZ computed from epoch secs.
     let (y, mo, d, h, mi, s) = epoch_to_ymdhms(secs);
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        y, mo, d, h, mi, s
-    )
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", y, mo, d, h, mi, s)
 }
 
 fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {

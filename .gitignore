@@ -23,7 +23,6 @@ _*.py
 _*.md
 
 # Repo-specific lines preserved from prior .gitignore:
-Cargo.lock
 *.swo
 target/
 .env
