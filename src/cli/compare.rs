@@ -152,16 +152,20 @@ pub fn diff(db: &Path, baseline: &str, current: &Path) -> Result<(), CliError> {
                 }) {
                 Ok(v) => index_benchmarks(&v),
                 Err(e) => {
-                    eprintln!("warn: could not parse baseline report {}: {}", p.display(), e);
+                    eprintln!(
+                        "warn: could not parse baseline report {}: {}",
+                        p.display(),
+                        e
+                    );
                     BTreeMap::new()
-                    }
                 }
-            } else {
-                BTreeMap::new()
             }
         } else {
             BTreeMap::new()
-        };
+        }
+    } else {
+        BTreeMap::new()
+    };
 
     let regression_threshold = resolve_regression_threshold(db);
     let improvement_threshold = -regression_threshold;
@@ -335,8 +339,9 @@ struct HeliosBenchResult {
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct HeliosBenchReport {
-    /// ISO 8601 timestamp of when the run finished.
-    finished_at: Option<String>,
+    /// ISO 8601 timestamp of when the run finished (parsed for schema fidelity).
+    #[serde(rename = "finished_at")]
+    _finished_at: Option<String>,
     /// Results array — same length as `wall_time_ns` rows.
     results: Vec<HeliosBenchResult>,
     /// Optional run label — used as a namespace prefix in the indexed names.
@@ -355,11 +360,10 @@ pub fn index_heliosbench(path: &Path) -> Result<BTreeMap<String, f64>, CliError>
         path: path.to_path_buf(),
         source: e,
     })?;
-    let report: HeliosBenchReport =
-        serde_json::from_str(&body).map_err(|e| CliError::Json {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+    let report: HeliosBenchReport = serde_json::from_str(&body).map_err(|e| CliError::Json {
+        path: path.to_path_buf(),
+        source: e,
+    })?;
     let prefix = match report.run_label.as_deref() {
         Some(label) if !label.is_empty() => format!("{}/", label),
         _ => String::new(),
@@ -386,11 +390,7 @@ pub fn index_auto(path: &Path) -> Result<BTreeMap<String, f64>, CliError> {
     let is_heliosbench = v
         .get("results")
         .and_then(|r| r.as_array())
-        .map(|arr| {
-            arr.first()
-                .and_then(|e| e.get("wall_time_ns"))
-                .is_some()
-        })
+        .map(|arr| arr.first().and_then(|e| e.get("wall_time_ns")).is_some())
         .unwrap_or(false);
     if is_heliosbench {
         index_heliosbench(path)
@@ -421,10 +421,7 @@ mod heliosbench_tests {
         // Simulate index_heliosbench by hand-rolling the loop.
         let mut out = BTreeMap::new();
         for r in report.results {
-            out.insert(
-                format!("ci-nightly/{}", r.task_id),
-                r.wall_time_ns,
-            );
+            out.insert(format!("ci-nightly/{}", r.task_id), r.wall_time_ns);
         }
         assert_eq!(out, expected);
     }
@@ -437,11 +434,7 @@ mod heliosbench_tests {
         let is_helios = v
             .get("results")
             .and_then(|r| r.as_array())
-            .map(|arr| {
-                arr.first()
-                    .and_then(|e| e.get("wall_time_ns"))
-                    .is_some()
-            })
+            .map(|arr| arr.first().and_then(|e| e.get("wall_time_ns")).is_some())
             .unwrap_or(false);
         assert!(is_helios);
 
@@ -451,11 +444,7 @@ mod heliosbench_tests {
         let is_helios = v
             .get("results")
             .and_then(|r| r.as_array())
-            .map(|arr| {
-                arr.first()
-                    .and_then(|e| e.get("wall_time_ns"))
-                    .is_some()
-            })
+            .map(|arr| arr.first().and_then(|e| e.get("wall_time_ns")).is_some())
             .unwrap_or(false);
         assert!(!is_helios);
     }
