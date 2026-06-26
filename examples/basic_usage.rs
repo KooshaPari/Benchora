@@ -1,49 +1,34 @@
-//! Benchora xDD library — basic usage example.
+//! Benchora xDD library - basic usage example.
 //!
-//! Demonstrates property-based testing, contract verification, and
-//! mutation score tracking on a tiny domain (email addresses).
+//! Demonstrates contract verification on a tiny domain (email addresses).
 //!
 //! Run with:
 //!   cargo run --example basic_usage
 
 use phenotype_xdd_lib::contract::{Contract, ContractVerifier};
 use phenotype_xdd_lib::domain::XddResult;
-use phenotype_xdd_lib::property::strategies;
 
-/// EmailValidationContract — round-trips parse → format → re-parse and
-/// asserts the two parses are byte-equal.
+/// EmailValidationContract checks that a sample email looks valid.
 pub struct EmailValidationContract;
 
 impl Contract for EmailValidationContract {
-    type Input = String;
-    type Output = String;
-
-    fn name(&self) -> &'static str {
-        "email_round_trip"
+    fn name() -> &'static str {
+        "email_validation"
     }
 
-    fn verify(&self, input: &Self::Input) -> XddResult<Self::Output> {
-        if !input.contains('@') {
-            return Err(phenotype_xdd_lib::domain::XddError::InvalidInput(
-                "missing @".into(),
-            ));
+    fn verify() -> XddResult<()> {
+        let sample = "Mixed.Case@Example.COM";
+        if !sample.contains('@') {
+            return Err(phenotype_xdd_lib::domain::XddError::contract("missing @"));
         }
-        Ok(input.to_lowercase())
+        Ok(())
     }
 }
 
 fn main() -> XddResult<()> {
-    // Property: any lowercase alphanumeric local-part + "@" + domain parses
-    // back to itself.
-    let valid = strategies::valid_email("user@example.com")?;
-    println!("parsed email: {valid}");
-
-    // Contract: verify round-trip on a known-good sample.
-    let verifier = ContractVerifier::new(EmailValidationContract);
-    let sample = "Mixed.Case@Example.COM".to_string();
-    let normalized = verifier.check(&sample)?;
-    println!("normalized:   {normalized}");
-    assert_eq!(normalized, "mixed.case@example.com");
+    let mut verifier = ContractVerifier::new();
+    verifier.verify::<EmailValidationContract>()?;
+    println!("verified: {}", EmailValidationContract::name());
     println!("OK");
     Ok(())
 }

@@ -11,8 +11,11 @@
 
 use std::fs;
 use std::path::Path;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use phenotype_xdd_lib::cli::compare::{resolve_regression_threshold, DEFAULT_REGRESSION_THRESHOLD_PCT};
+use phenotype_xdd_lib::cli::compare::{
+    resolve_regression_threshold, DEFAULT_REGRESSION_THRESHOLD_PCT,
+};
 
 /// Helper: write a minimal criterion-style report JSON with one
 /// benchmark at the given nanosecond timing.
@@ -28,9 +31,15 @@ fn write_criterion_report(path: &Path, name: &str, ns: f64) {
     fs::write(path, serde_json::to_vec_pretty(&body).unwrap()).unwrap();
 }
 
+fn env_lock() -> MutexGuard<'static, ()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(())).lock().unwrap()
+}
+
 /// Tier-2 #1: default threshold is 5.0 when nothing is configured.
 #[test]
 fn resolve_threshold_default_when_nothing_set() {
+    let _guard = env_lock();
     // Point at a path that definitely does NOT exist as a SQLite DB so
     // `open_for_read` fails and the function falls through to default.
     let bogus_db = Path::new("target/benchora-tests/no-such-db.sqlite");
@@ -49,6 +58,7 @@ fn resolve_threshold_default_when_nothing_set() {
 /// Tier-2 #1: env var wins over default.
 #[test]
 fn resolve_threshold_env_overrides_default() {
+    let _guard = env_lock();
     let bogus_db = Path::new("target/benchora-tests/no-such-db.sqlite");
     std::env::set_var("BENCHORA_REGRESSION_THRESHOLD_PCT", "12.5");
     let t = resolve_regression_threshold(bogus_db);
@@ -59,6 +69,7 @@ fn resolve_threshold_env_overrides_default() {
 /// Tier-2 #1: malformed env falls back to default with a warning.
 #[test]
 fn resolve_threshold_env_malformed_falls_back() {
+    let _guard = env_lock();
     let bogus_db = Path::new("target/benchora-tests/no-such-db.sqlite");
     std::env::set_var("BENCHORA_REGRESSION_THRESHOLD_PCT", "not-a-number");
     let t = resolve_regression_threshold(bogus_db);
@@ -72,6 +83,7 @@ fn resolve_threshold_env_malformed_falls_back() {
 /// Tier-2 #1: synthetic 10% regression is flagged as CliError::Other.
 #[test]
 fn diff_flags_ten_percent_regression() {
+    let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
     let db = tmp.path().join("benchora.sqlite");
     let baseline_report = tmp.path().join("baseline.json");
@@ -98,7 +110,13 @@ fn diff_flags_ten_percent_regression() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }
@@ -116,6 +134,7 @@ fn diff_flags_ten_percent_regression() {
 /// Tier-2 #1: 2% regression is NOT flagged under the default 5% threshold.
 #[test]
 fn diff_passes_within_noise() {
+    let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
     let db = tmp.path().join("benchora.sqlite");
     let baseline_report = tmp.path().join("baseline.json");
@@ -141,19 +160,29 @@ fn diff_passes_within_noise() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }
 
     std::env::remove_var("BENCHORA_REGRESSION_THRESHOLD_PCT");
     let result = phenotype_xdd_lib::cli::compare::diff(&db, "main", &current_report);
-    assert!(result.is_ok(), "expected 2% within noise to pass, got: {result:?}");
+    assert!(
+        result.is_ok(),
+        "expected 2% within noise to pass, got: {result:?}"
+    );
 }
 
 /// Tier-2 #1: env-threshold raises the gate so 4% passes (would fail at default 5%).
 #[test]
 fn diff_env_threshold_lets_moderate_regression_pass() {
+    let _guard = env_lock();
     let tmp = tempfile::tempdir().unwrap();
     let db = tmp.path().join("benchora.sqlite");
     let baseline_report = tmp.path().join("baseline.json");
@@ -179,7 +208,13 @@ fn diff_env_threshold_lets_moderate_regression_pass() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }

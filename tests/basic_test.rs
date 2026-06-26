@@ -83,21 +83,16 @@ mod tests {
         let mut tracker = MutationTracker::new();
         let mut ids = Vec::new();
         for i in 0..10 {
-            ids.push(tracker.introduce_mutation(
-                "src/lib.rs",
-                i,
-                MutationKind::Arithmetic,
-            ));
+            ids.push(tracker.introduce_mutation("src/lib.rs", i, MutationKind::Arithmetic));
         }
         // 2 killed, 3 marked equivalent (removed from total), 5 survived
         tracker.kill_mutation(&ids[0]);
         tracker.kill_mutation(&ids[1]);
-        for i in 2..5 {
-            tracker.mark_equivalent(&ids[i]);
+        for id in ids.iter().take(5).skip(2) {
+            tracker.mark_equivalent(id);
         }
         // score = 2 / (10 - 3) = 2/7
         let score = tracker.mutation_score().expect("non-empty");
         assert!((score - (2.0 / 7.0)).abs() < 1e-9, "got {score}");
     }
 }
-
