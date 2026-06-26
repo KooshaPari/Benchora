@@ -104,10 +104,12 @@ fn run_criterion_bencher(bench_name: &str) -> Result<Vec<serde_json::Value>, Cli
     // Keep cargo quiet so the only stdout we parse is criterion's JSON.
     cmd.env("CARGO_TERM_COLOR", "never");
 
-    let output = cmd.output().map_err(|e| CliError::Other(format!(
-        "failed to spawn `cargo bench --bench {}`: {} (is cargo on PATH?)",
-        bench_name, e
-    )))?;
+    let output = cmd.output().map_err(|e| {
+        CliError::Other(format!(
+            "failed to spawn `cargo bench --bench {}`: {} (is cargo on PATH?)",
+            bench_name, e
+        ))
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -118,10 +120,7 @@ fn run_criterion_bencher(bench_name: &str) -> Result<Vec<serde_json::Value>, Cli
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let entries: Vec<serde_json::Value> = stdout
-        .lines()
-        .filter_map(parse_bencher_line)
-        .collect();
+    let entries: Vec<serde_json::Value> = stdout.lines().filter_map(parse_bencher_line).collect();
     Ok(entries)
 }
 
@@ -221,7 +220,10 @@ pub fn list(db: &Path) -> Result<(), CliError> {
             path: db.to_path_buf(),
             source: e,
         })?;
-    println!("{:<6} {:<12} {:<14} {:<22} {}", "ID", "SUITE", "SHA256-PREFIX", "CREATED", "PATH");
+    println!(
+        "{:<6} {:<12} {:<14} {:<22} PATH",
+        "ID", "SUITE", "SHA256-PREFIX", "CREATED"
+    );
     for row in rows {
         let (id, suite, sha, created, path) = row.map_err(|e| CliError::Db {
             path: db.to_path_buf(),
@@ -254,10 +256,7 @@ fn now_iso_string() -> String {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     let (y, mo, d, h, mi, s) = epoch_to_ymdhms(secs);
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        y, mo, d, h, mi, s
-    )
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", y, mo, d, h, mi, s)
 }
 
 fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {

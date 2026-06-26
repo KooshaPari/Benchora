@@ -37,7 +37,12 @@ pub use error::CliError;
 )]
 pub struct Cli {
     /// Path to the Benchora SQLite DB.
-    #[arg(long, env = "BENCHORA_DB", default_value = "benchora.db", global = true)]
+    #[arg(
+        long,
+        env = "BENCHORA_DB",
+        default_value = "benchora.db",
+        global = true
+    )]
     pub db: PathBuf,
 
     #[command(subcommand)]
@@ -101,7 +106,11 @@ pub fn run(cli: Cli) -> Result<(), CliError> {
         Cmd::Run { suite, out } => report::run_suite(&cli.db, &suite, out.as_deref()),
         Cmd::Report { path } => report::summarize(&path),
         Cmd::Baseline { name, from } => baseline::promote(&cli.db, &name, &from),
-        Cmd::Compare { baseline, current, regression_threshold_pct } => {
+        Cmd::Compare {
+            baseline,
+            current,
+            regression_threshold_pct,
+        } => {
             // Per-invocation override takes precedence over env/DB/default.
             if let Some(v) = regression_threshold_pct {
                 if v.is_finite() {
@@ -109,7 +118,7 @@ pub fn run(cli: Cli) -> Result<(), CliError> {
                 }
             }
             compare::diff(&cli.db, &baseline, &current)
-        },
+        }
         Cmd::List { kind } => match kind {
             ListKind::Baselines => baseline::list(&cli.db),
             ListKind::Reports => report::list(&cli.db),

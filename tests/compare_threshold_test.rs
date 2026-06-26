@@ -12,7 +12,9 @@
 use std::fs;
 use std::path::Path;
 
-use phenotype_xdd_lib::cli::compare::{resolve_regression_threshold, DEFAULT_REGRESSION_THRESHOLD_PCT};
+use phenotype_xdd_lib::cli::compare::{
+    resolve_regression_threshold, DEFAULT_REGRESSION_THRESHOLD_PCT,
+};
 
 /// Helper: write a minimal criterion-style report JSON with one
 /// benchmark at the given nanosecond timing.
@@ -98,7 +100,13 @@ fn diff_flags_ten_percent_regression() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }
@@ -141,14 +149,23 @@ fn diff_passes_within_noise() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }
 
     std::env::remove_var("BENCHORA_REGRESSION_THRESHOLD_PCT");
     let result = phenotype_xdd_lib::cli::compare::diff(&db, "main", &current_report);
-    assert!(result.is_ok(), "expected 2% within noise to pass, got: {result:?}");
+    assert!(
+        result.is_ok(),
+        "expected 2% within noise to pass, got: {result:?}"
+    );
 }
 
 /// Tier-2 #1: env-threshold raises the gate so 4% passes (would fail at default 5%).
@@ -179,7 +196,13 @@ fn diff_env_threshold_lets_moderate_regression_pass() {
         conn.execute(
             "INSERT INTO baselines (name, suite, report_path, sha256, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params!["main", "core", baseline_report.to_string_lossy(), sha, "2026-06-23T00:00:00Z"],
+            rusqlite::params![
+                "main",
+                "core",
+                baseline_report.to_string_lossy(),
+                sha,
+                "2026-06-23T00:00:00Z"
+            ],
         )
         .unwrap();
     }

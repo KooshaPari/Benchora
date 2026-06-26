@@ -230,7 +230,9 @@ impl MutationTracker {
 
     /// Get all tracked files.
     pub fn files(&self) -> impl Iterator<Item = (&str, usize)> {
-        self.files.iter().map(|(k, v)| (k.as_str(), v.lines_seen.len()))
+        self.files
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.lines_seen.len()))
     }
 }
 
@@ -259,11 +261,7 @@ impl CoverageReport {
                 (t, e + exec)
             });
         // For a more accurate per-file sum, walk the underlying map.
-        let precise_total: usize = tracker
-            .files
-            .values()
-            .map(|f| f.effective_loc())
-            .sum();
+        let precise_total: usize = tracker.files.values().map(|f| f.effective_loc()).sum();
         let total_lines = if precise_total == 0 {
             total_lines
         } else {
@@ -291,15 +289,15 @@ mod tests {
     #[test]
     fn test_tracker_creation() {
         let tracker = MutationTracker::new();
-        assert_eq!(tracker.mutation_score(), 1.0);
+        assert_eq!(tracker.mutation_score(), None);
     }
 
     #[test]
     fn test_record_line_execution() {
         let mut tracker = MutationTracker::new();
-        // Without recording LOC, coverage falls back to max_line_seen / max_line_seen = 1.0
+        // Without recording LOC, coverage uses max_line_seen as the denominator.
         tracker.record_line_execution("src/lib.rs", 10);
-        assert_eq!(tracker.coverage("src/lib.rs"), 1.0);
+        assert!((tracker.coverage("src/lib.rs") - 0.1).abs() < 1e-9);
 
         // When the file has more lines than were executed, coverage is partial.
         let mut tracker = MutationTracker::new();
@@ -307,11 +305,12 @@ mod tests {
         tracker.record_line_execution("src/lib.rs", 10);
         assert!((tracker.coverage("src/lib.rs") - (1.0 / 200.0)).abs() < 1e-9);
 
-        // Clamps to 1.0 if more lines were executed than recorded.
+        // Full coverage when every recorded line was executed at least once.
         let mut tracker = MutationTracker::new();
         tracker.record_file_loc("src/lib.rs", 100);
-        tracker.record_line_execution("src/lib.rs", 50);
-        tracker.record_line_execution("src/lib.rs", 150);
+        for line in 1..=100 {
+            tracker.record_line_execution("src/lib.rs", line);
+        }
         assert_eq!(tracker.coverage("src/lib.rs"), 1.0);
     }
 
@@ -319,9 +318,9 @@ mod tests {
     fn test_mutation_introduction() {
         let mut tracker = MutationTracker::new();
         let id = tracker.introduce_mutation("src/lib.rs", 42, MutationKind::Arithmetic);
-        assert_eq!(tracker.mutation_score(), 0.0);
+        assert_eq!(tracker.mutation_score(), Some(0.0));
         tracker.kill_mutation(&id);
-        assert_eq!(tracker.mutation_score(), 1.0);
+        assert_eq!(tracker.mutation_score(), Some(1.0));
     }
 
     #[test]
@@ -330,7 +329,7 @@ mod tests {
         let id1 = tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
         let _id2 = tracker.introduce_mutation("src/lib.rs", 2, MutationKind::Comparison);
         tracker.kill_mutation(&id1);
-        assert_eq!(tracker.mutation_score(), 0.5);
+        assert_eq!(tracker.mutation_score(), Some(0.5));
     }
 
     #[test]
@@ -338,7 +337,7 @@ mod tests {
         let mut tracker = MutationTracker::new();
         let id = tracker.introduce_mutation("src/lib.rs", 42, MutationKind::ValueReplacement);
         tracker.mark_equivalent(&id);
-        // Equivalent mutations don't count toward total
-        assert_eq!(tracker.mutation_score(), 1.0);
+        // Equivalent mutations are removed from the total; no score when empty.
+        assert_eq!(tracker.mutation_score(), None);
     }
 }

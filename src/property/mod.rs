@@ -11,7 +11,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use gauge::property::strategies::valid_email;
+//! use phenotype_xdd_lib::property::strategies::valid_email;
 //!
 //! assert!(valid_email("user@example.com").is_ok());
 //! ```
