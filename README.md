@@ -1,3 +1,19 @@
+> **Work state:** ACTIVE · **Progress:** `████████░░ 80%`
+
+Benchora is a Rust benchmarking and xDD testing toolkit for the Phenotype ecosystem, pairing Criterion-based bench harnesses with a CLI, SQLite-backed baseline storage, mutation-coverage tracking, and reusable xDD utilities for contract validation and property strategies.
+
+## Usage / Quickstart
+
+```bash
+cd Benchora
+cargo build
+cargo test
+cargo bench --bench my_benchmark
+cargo run --release -- run --suite my_benchmark --out ./reports
+```
+
+Progress: `[████████░░] 80%`
+
 <!-- AI-DD-META:START -->
 <!-- This repository is planned, maintained, and managed by AI Agents only. -->
 <!-- Slop issues are expected and intentionally present as part of an HITL-less -->
