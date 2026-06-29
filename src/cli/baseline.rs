@@ -68,7 +68,10 @@ pub fn sha256_via_pub(path: &Path) -> Result<String, CliError> {
     let mut hasher = Sha256::new();
     hasher.update(&buf);
     let digest = hasher.finalize();
-    Ok(format!("{:x}", digest))
+    // Build the lowercase hex string byte-by-byte. Both bare `GenericArray`
+    // and `&[u8]` lost their `LowerHex` impl on current `generic-array` /
+    // stable-rustc, so iterate the individual bytes which DO impl it.
+    Ok(digest.iter().map(|b| format!("{:02x}", b)).collect())
 }
 
 /// Promote a report to a named baseline.
