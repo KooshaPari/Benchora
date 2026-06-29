@@ -152,7 +152,11 @@ pub fn int_strategy(min: i64, max: i64) -> impl Strategy<Value = i64> {
 
 /// Generate a random non-empty string.
 pub fn non_empty_string_strategy(max_len: usize) -> impl Strategy<Value = String> {
-    proptest::string::string_regex(&format!(".{{1,{}}}", max_len)).unwrap()
+    // Pattern `.{1,N}` is a valid `regex_syntax::Regex` for every `usize` N
+    // (only the literal dot and a quantified repetition `{m,n}`), so the
+    // returned `Strategy` cannot fail to compile.
+    proptest::string::string_regex(&format!(".{{1,{}}}", max_len))
+        .expect("invariant: `.{1,N}` is a valid regex for every usize N")
 }
 
 /// Generate a random valid URL.
@@ -172,7 +176,12 @@ mod tests {
     fn test_valid_uuid_success() {
         let result = valid_uuid("550e8400-e29b-41d4-a716-446655440000");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "550e8400-e29b-41d4-a716-446655440000");
+        // The literal is a known-good fixture; unwrap is unnecessary because
+        // we already asserted success on the line above.
+        assert_eq!(
+            result.expect("test fixture is a hard-coded valid UUID v4"),
+            "550e8400-e29b-41d4-a716-446655440000"
+        );
     }
 
     #[test]
@@ -195,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_positive_int_success() {
-        assert_eq!(positive_int(42).unwrap(), 42);
+        assert_eq!(positive_int(42).expect("test fixture 42 is positive"), 42);
     }
 
     #[test]
@@ -205,7 +214,10 @@ mod tests {
 
     #[test]
     fn test_bounded_int_success() {
-        assert_eq!(bounded_int(50, 0, 100).unwrap(), 50);
+        assert_eq!(
+            bounded_int(50, 0, 100).expect("test fixture 50 is within [0,100]"),
+            50
+        );
     }
 
     #[test]

@@ -413,7 +413,8 @@ mod heliosbench_tests {
                 {"task_id": "parse_min", "wall_time_ns": 5678.0}
             ]
         }"#;
-        let report: HeliosBenchReport = serde_json::from_str(json).unwrap();
+        let report: HeliosBenchReport =
+            serde_json::from_str(json).expect("heliosBench test fixture is valid JSON");
         assert_eq!(report.results.len(), 2);
         let mut expected = BTreeMap::new();
         expected.insert("ci-nightly/noop".to_string(), 1234.5);
@@ -430,7 +431,8 @@ mod heliosbench_tests {
     fn index_auto_picks_heliosbench() {
         // heliosBench style
         let helios = r#"{"results": [{"task_id": "x", "wall_time_ns": 100.0}]}"#;
-        let v: serde_json::Value = serde_json::from_str(helios).unwrap();
+        let v: serde_json::Value =
+            serde_json::from_str(helios).expect("heliosBench format-detect fixture is valid JSON");
         let is_helios = v
             .get("results")
             .and_then(|r| r.as_array())
@@ -440,7 +442,8 @@ mod heliosbench_tests {
 
         // Criterion style
         let crit = r#"{"benchmarks": [{"full_id": "x::y", "typical": {"point_estimate": 100.0}}]}"#;
-        let v: serde_json::Value = serde_json::from_str(crit).unwrap();
+        let v: serde_json::Value =
+            serde_json::from_str(crit).expect("Criterion format-detect fixture is valid JSON");
         let is_helios = v
             .get("results")
             .and_then(|r| r.as_array())
