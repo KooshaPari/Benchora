@@ -280,7 +280,9 @@ features:
     then:
       - description: expected outcome
 "#;
-        let spec = SpecParser::parse(yaml).unwrap();
+        // The YAML literal above is a known-good fixture; using `expect` here
+        // documents the assumption instead of panicking with a stack trace.
+        let spec = SpecParser::parse(yaml).expect("spec test fixture is valid YAML");
         assert_eq!(spec.spec.name, "Test Spec");
         assert_eq!(spec.features.len(), 1);
     }
