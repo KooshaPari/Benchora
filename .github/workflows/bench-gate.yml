@@ -30,7 +30,7 @@ jobs:
     name: rustfmt (nightly)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
@@ -40,7 +40,7 @@ jobs:
     name: clippy (nightly, -D warnings)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
@@ -50,7 +50,7 @@ jobs:
     name: test (criterion benches + unit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo +nightly test --all-features --all-targets
       - run: cargo +nightly bench --all-features --no-run
@@ -59,7 +59,7 @@ jobs:
     name: proptest (256 cases, all targets)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - name: Run proptest cases
         run: |
@@ -71,7 +71,7 @@ jobs:
     name: cargo-mutants (>=75% kill rate)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - name: Install cargo-mutants
         run: cargo install --locked cargo-mutants
@@ -82,7 +82,7 @@ jobs:
             --output mutants-out
       - name: Upload mutants report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutants-report
           path: mutants-out/
