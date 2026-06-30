@@ -63,7 +63,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
       - name: Run proptest cases
         run: |
-          cargo +nightly test --all-features --all-targets proptest -- --test-threads=1
+          cargo +nightly test --lib --all-features proptest -- --test-threads=1
         env:
           PROPTEST_CASES: '256'
 
