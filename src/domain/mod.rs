@@ -70,6 +70,11 @@ impl XddError {
     pub fn spec(message: impl Into<String>) -> Self {
         Self::new(message, ErrorCategory::Spec)
     }
+
+    /// Create an internal/unexpected error.
+    pub fn internal(message: impl Into<String>) -> Self {
+        Self::new(message, ErrorCategory::Internal)
+    }
 }
 
 impl fmt::Display for XddError {
@@ -105,5 +110,100 @@ impl fmt::Display for ErrorCategory {
             ErrorCategory::Spec => write!(f, "spec"),
             ErrorCategory::Internal => write!(f, "internal"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Factory constructors ──────────────────────────────────────────────
+
+    #[test]
+    fn new_sets_message_and_category() {
+        let e = XddError::new("something failed", ErrorCategory::Internal);
+        assert_eq!(e.message, "something failed");
+        assert_eq!(e.category, ErrorCategory::Internal);
+        assert!(e.context.is_null());
+    }
+
+    #[test]
+    fn property_factory_sets_category() {
+        let e = XddError::property("bad value");
+        assert_eq!(e.category, ErrorCategory::Property);
+    }
+
+    #[test]
+    fn contract_factory_sets_category() {
+        let e = XddError::contract("adapter mismatch");
+        assert_eq!(e.category, ErrorCategory::Contract);
+    }
+
+    #[test]
+    fn mutation_factory_sets_category() {
+        let e = XddError::mutation("low kill rate");
+        assert_eq!(e.category, ErrorCategory::Mutation);
+    }
+
+    #[test]
+    fn spec_factory_sets_category() {
+        let e = XddError::spec("missing field");
+        assert_eq!(e.category, ErrorCategory::Spec);
+    }
+
+    // ── with_context ─────────────────────────────────────────────────────
+
+    #[test]
+    fn with_context_adds_key_value_pair() {
+        let e = XddError::property("oops").with_context("file", "src/lib.rs");
+        let ctx = e
+            .context
+            .as_object()
+            .expect("context must be a JSON object");
+        assert_eq!(ctx["file"], serde_json::json!("src/lib.rs"));
+    }
+
+    #[test]
+    fn with_context_multiple_keys_accumulate() {
+        let e = XddError::internal("fail")
+            .with_context("line", 42_u64)
+            .with_context("col", 7_u64);
+        let ctx = e
+            .context
+            .as_object()
+            .expect("context must be a JSON object");
+        assert_eq!(ctx["line"], serde_json::json!(42));
+        assert_eq!(ctx["col"], serde_json::json!(7));
+    }
+
+    // ── Display ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn display_includes_category_and_message() {
+        let e = XddError::spec("missing name");
+        let s = e.to_string();
+        assert!(s.contains("Spec"), "display must include category: {s}");
+        assert!(
+            s.contains("missing name"),
+            "display must include message: {s}"
+        );
+    }
+
+    #[test]
+    fn error_category_display_all_variants() {
+        assert_eq!(ErrorCategory::Property.to_string(), "property");
+        assert_eq!(ErrorCategory::Contract.to_string(), "contract");
+        assert_eq!(ErrorCategory::Mutation.to_string(), "mutation");
+        assert_eq!(ErrorCategory::Spec.to_string(), "spec");
+        assert_eq!(ErrorCategory::Internal.to_string(), "internal");
+    }
+
+    // ── std::error::Error impl ───────────────────────────────────────────
+
+    #[test]
+    fn xdd_error_implements_std_error() {
+        let e = XddError::internal("boom");
+        // Coerce to trait object — compile-time proof of impl.
+        let _: &dyn std::error::Error = &e;
     }
 }
