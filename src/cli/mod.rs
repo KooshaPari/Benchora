@@ -24,6 +24,7 @@ use clap::{Parser, Subcommand};
 pub mod baseline;
 pub mod compare;
 pub mod error;
+pub mod mutate;
 pub mod report;
 
 pub use error::CliError;
@@ -86,6 +87,18 @@ pub enum Cmd {
         #[arg(long, value_name = "PCT", env = "BENCHORA_REGRESSION_THRESHOLD_PCT")]
         regression_threshold_pct: Option<f64>,
     },
+    /// Run mutation testing.
+    Mutate {
+        /// Package to pass through to the mutation runner.
+        #[arg(long)]
+        package: Option<String>,
+        /// File to pass through to the mutation runner.
+        #[arg(long)]
+        file: Option<PathBuf>,
+        /// Minimum mutation score required for success.
+        #[arg(long)]
+        min_score: Option<f64>,
+    },
     /// List stored baselines / reports.
     List {
         /// What to list.
@@ -119,6 +132,11 @@ pub fn run(cli: Cli) -> Result<(), CliError> {
             }
             compare::diff(&cli.db, &baseline, &current)
         }
+        Cmd::Mutate {
+            package,
+            file,
+            min_score,
+        } => mutate::run(package.as_deref(), file.as_deref(), min_score),
         Cmd::List { kind } => match kind {
             ListKind::Baselines => baseline::list(&cli.db),
             ListKind::Reports => report::list(&cli.db),
