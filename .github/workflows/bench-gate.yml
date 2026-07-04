@@ -73,16 +73,33 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: stable
       - name: Install cargo-mutants
         run: cargo install --locked cargo-mutants
-      - name: Run mutation testing
+      - name: Build benchora CLI (release)
+        run: cargo build --release --locked --bin benchora
+      - name: Run mutation testing via benchora CLI
+        # The CLI shells out to `cargo mutants`, parses the per-run summary,
+        # persists to the benchora SQLite, and exits non-zero when the
+        # measured kill-rate is below the threshold. This is the same
+        # binary users run locally for the same check.
         run: |
-          cargo mutants --no-shuffle --jobs 2 \
-            --minimum-pass-rate 75 \
-            --output mutants-out
+          cargo run --release --locked --bin benchora -- \
+            --db benchora-mutations.db \
+            mutate \
+              --package benchora \
+              --min-score 75 \
+              --output mutants-out
       - name: Upload mutants report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: mutants-report
           path: mutants-out/
+      - name: Upload mutation-run SQLite
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchora-mutations
+          path: benchora-mutations.db
