@@ -44,8 +44,10 @@ pub fn run(
     let mut cmd = Command::new("cargo");
     cmd.arg("mutants")
         .arg("--no-shuffle")
-        .arg("--jobs").arg("2")
-        .arg("--output").arg(&output_dir);
+        .arg("--jobs")
+        .arg("2")
+        .arg("--output")
+        .arg(&output_dir);
     if let Some(pkg) = package {
         cmd.arg("--package").arg(pkg);
     }
@@ -120,10 +122,7 @@ pub fn run(
         }
     }
 
-    if !status.success()
-        && min_score.is_none()
-        && !output_dir.exists()
-    {
+    if !status.success() && min_score.is_none() && !output_dir.exists() {
         return Err(CliError::Other(format!(
             "cargo mutants exited with {status} (no output_dir produced)"
         )));
@@ -232,7 +231,12 @@ fn parse_mutants_dir(dir: &Path) -> Result<RunSummary, CliError> {
         )));
     }
     Ok(RunSummary {
-        total, killed, survived, timeout, unviable, no_test,
+        total,
+        killed,
+        survived,
+        timeout,
+        unviable,
+        no_test,
     })
 }
 
@@ -250,10 +254,7 @@ fn print_report(latest: &tracker_db::LatestRun, summary: RunSummary) {
     );
     if let Some(t) = latest.min_score {
         let verdict = if latest.passed { "PASS" } else { "FAIL" };
-        println!(
-            "[benchora mutate] threshold={:.2}% verdict={}",
-            t, verdict
-        );
+        println!("[benchora mutate] threshold={:.2}% verdict={}", t, verdict);
     }
     println!(
         "[benchora mutate] persisted at {} (db output_dir={})",
@@ -272,11 +273,7 @@ mod tests {
             "schema_version": 1,
             "outcomes": outcomes,
         });
-        fs::write(
-            dir.join("summary.json"),
-            serde_json::to_vec(&body).unwrap(),
-        )
-        .unwrap();
+        fs::write(dir.join("summary.json"), serde_json::to_vec(&body).unwrap()).unwrap();
     }
 
     #[test]
@@ -306,11 +303,16 @@ mod tests {
         let tmp = tempdir().unwrap();
         let sub = tmp.path().join("mutations");
         fs::create_dir_all(&sub).unwrap();
-        let statuses = ["killed", "killed", "survived", "timeout", "unviable", "no_test"];
+        let statuses = [
+            "killed", "killed", "survived", "timeout", "unviable", "no_test",
+        ];
         for (i, s) in statuses.iter().enumerate() {
             let body = serde_json::json!({ "status": s, "id": format!("m{i}") });
-            fs::write(sub.join(format!("m{i}.json")), serde_json::to_vec(&body).unwrap())
-                .unwrap();
+            fs::write(
+                sub.join(format!("m{i}.json")),
+                serde_json::to_vec(&body).unwrap(),
+            )
+            .unwrap();
         }
         let s = parse_mutants_dir(tmp.path()).expect("parse");
         assert_eq!(s.total, 6);

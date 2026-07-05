@@ -80,15 +80,18 @@ pub fn record(
         // Empty run is treated as 1.0 (no mutants = nothing to fail) so we
         // don't generate spurious "below threshold" failures on trivial
         // crates. The `passed` column still records the verdict for
-        // debugging — it's `0` when the user pinned a min_score that the
-        // empty run can't show value for (None is recorded as 1).
-        if min_score.is_some() { 1.0 } else { 1.0 }
+        // debugging.
+        1.0
     } else {
         summary.killed as f64 / summary.total as f64
     };
     let passed = match min_score {
         Some(threshold) if threshold > 0.0 => {
-            if kill_rate * 100.0 + f64::EPSILON >= threshold { 1 } else { 0 }
+            if kill_rate * 100.0 + f64::EPSILON >= threshold {
+                1
+            } else {
+                0
+            }
         }
         _ => 1,
     };
@@ -143,11 +146,7 @@ pub struct LatestRun {
     pub created_at: String,
 }
 
-pub fn latest_for(
-    db: &Path,
-    suite: &str,
-    package: &str,
-) -> Result<Option<LatestRun>, CliError> {
+pub fn latest_for(db: &Path, suite: &str, package: &str) -> Result<Option<LatestRun>, CliError> {
     let conn = open(db)?;
     let mut stmt = conn
         .prepare(
@@ -223,8 +222,8 @@ pub fn list(db: &Path, limit: u32) -> Result<(), CliError> {
             source: e,
         })?;
     println!(
-        "{:<14} {:<16} {:>5} {:>5} {:>7} {:>7} {:<6} {}",
-        "SUITE", "PACKAGE", "TOTAL", "KILLED", "KILL%", "THRESH%", "PASS", "CREATED"
+        "{:<14} {:<16} {:>5} {:>5} {:>7} {:>7} {:<6} CREATED",
+        "SUITE", "PACKAGE", "TOTAL", "KILLED", "KILL%", "THRESH%", "PASS",
     );
     for row in rows {
         let (suite, package, total, killed, kill_pct, threshold, passed, created) =
@@ -290,10 +289,14 @@ mod tests {
         let tmp = tempdir().expect("tempdir");
         let db = tmp.path().join("mutations.db");
         let summary = RunSummary {
-            total: 0, killed: 0, survived: 0, timeout: 0, unviable: 0, no_test: 0,
+            total: 0,
+            killed: 0,
+            survived: 0,
+            timeout: 0,
+            unviable: 0,
+            no_test: 0,
         };
-        record(&db, "core", "benchora", None, "out", summary, Some(75.0))
-            .expect("record");
+        record(&db, "core", "benchora", None, "out", summary, Some(75.0)).expect("record");
         let latest = latest_for(&db, "core", "benchora")
             .expect("query")
             .expect("present");
