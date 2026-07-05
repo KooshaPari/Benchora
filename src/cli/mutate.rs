@@ -1,9 +1,8 @@
 //! Mutation testing CLI: real `cargo mutants` executor + parser.
 //!
 //! Walks the work the original PR (#65) stub promised:
-//! 1. Spawn `cargo mutants --output <dir> --no-shuffle --jobs 2 -- --package ...
-//!    --file ...` (or the package/file args straight through) and capture
-//!    stdout/stderr + exit status.
+//! 1. Spawn `cargo mutants --output <dir> --no-shuffle --jobs 2 [--package ...]
+//!    [--file ...]` and capture stdout/stderr + exit status.
 //! 2. Parse the output directory for `summary.json` (cargo-mutants' canonical
 //!    per-run rollup) plus the per-mutation `mutations.json` listing.
 //! 3. Roll both into a [`tracker_db::RunSummary`] and persist via
@@ -13,9 +12,12 @@
 //!    function returns a [`CliError::Other`] so the binary exits non-zero —
 //!    exactly what `bench-gate.yml` needs to fail the gate.
 //!
+//! Threshold enforcement lives entirely in the local parser + tracker_db
+//! layer; cargo-mutants 27.x removed `--minimum-pass-rate`, so we never
+//! forward a threshold flag to the cargo-mutants binary.
+//!
 //! [`tracker_db::RunSummary`]: crate::cli::tracker_db::RunSummary
 //! [`tracker_db::record`]: crate::cli::tracker_db::record
-
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -51,17 +53,14 @@ pub fn run(
     if let Some(pkg) = package {
         cmd.arg("--package").arg(pkg);
     }
-    if let Some(min) = min_score {
-        // cargo-mutants also accepts --minimum-pass-rate; pass through for
-        // a final, runner-level belt-and-braces check. Local parser below
-        // re-enforces against parsed JSON so we're robust even when the
-        // binary is missing or older.
-        cmd.arg("--minimum-pass-rate").arg(format!("{}", min));
-    }
+    // Note: cargo-mutants 27.x does not accept --minimum-pass-rate
+    // (removed/renamed upstream). Threshold enforcement lives entirely in
+    // the local parser + tracker_db layer below so the gate stays robust
+    // across cargo-mutants versions.
     // Per-file scope is `--file <relative/path>` in cargo-mutants; we
     // accept it as a trailing arg after `--`.
     if let Some(f) = file {
-        cmd.arg("--").arg(f);
+        cmd.arg("--file").arg(f);
     }
 
     eprintln!(
