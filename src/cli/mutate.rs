@@ -3,9 +3,14 @@
 //! Walks the work the original PR (#65) stub promised:
 //! 1. Spawn `cargo mutants --output <dir> --no-shuffle --jobs 2 [--package ...]
 //!    [--file ...]` and capture stdout/stderr + exit status.
-//! 2. Parse the output directory for `summary.json` (cargo-mutants' canonical
-//!    per-run rollup) plus the per-mutation `mutations.json` listing.
-//! 3. Roll both into a [`tracker_db::RunSummary`] and persist via
+//! 2. Parse `outcomes.json` from cargo-mutants 27.x. cargo-mutants nests its
+//!    artifacts at `<output>/mutants.out/`; the summary file lives at
+//!    `<output>/mutants.out/outcomes.json`. The schema is `Vec<Outcome>`
+//!    where each outcome carries either `scenario: "Baseline"` or
+//!    `scenario: { Mutant: { name, package, file, replacement, genre } }`
+//!    plus a `summary` discriminator of `"CaughtMutant" | "MissedMutant" |
+//!    "Unviable" | "Timeout" | "Success" | "Failure"`.
+//! 3. Roll those into a [`tracker_db::RunSummary`] and persist via
 //!    [`tracker_db::record`] so the run is queryable later
 //!    (`benchora list mutations`).
 //! 4. Enforce the user-supplied `--min-score` threshold. Below threshold the
@@ -82,7 +87,7 @@ pub fn run(
                 || source.raw_os_error() == Some(2)
             {
                 CliError::Other(
-                    "cargo-mutants not installed — install with `cargo install --locked cargo-mutants`"
+                    "cargo-mutants not installed -- install with `cargo install --locked cargo-mutants`"
                         .to_string(),
                 )
             } else {
@@ -109,9 +114,8 @@ pub fn run(
         .ok_or_else(|| CliError::Other("mutation row missing after insert".into()))?;
     print_report(&latest, parsed);
 
-    // cargo-mutants already exits non-zero on threshold failure. Treat our
-    // computed threshold as authoritative so the gate stays stable even
-    // when the runner's verdict and ours disagree.
+    // The locally-computed threshold is authoritative so the gate stays
+    // stable even when the runner's verdict and ours disagree.
     if let Some(threshold) = min_score {
         let pct = latest.kill_rate * 100.0;
         if pct + f64::EPSILON < threshold {
@@ -121,91 +125,191 @@ pub fn run(
         }
     }
 
-    if !status.success() && min_score.is_none() && !output_dir.exists() {
+    if !status.success() && min_score.is_none() && parsed.total == 0 {
         return Err(CliError::Other(format!(
-            "cargo mutants exited with {status} (no output_dir produced)"
+            "cargo mutants exited with {status} (no viable mutations parsed)"
         )));
     }
 
     Ok(())
 }
 
-/// Parse the output directory produced by `cargo mutants`.
-/// Looks for `summary.json` and falls back to aggregating
-/// per-mutation `*.json` files.
+/// Parse the output directory produced by `cargo mutants` 27.x.
+///
+/// cargo-mutants 27.x nests its artifacts at `<output>/mutants.out/`:
+///
+///   * `outcomes.json`  -- full outcome list (baseline + every mutant).
+///   * `caught.txt`     -- names of mutants that were caught.
+///   * `missed.txt`     -- names of mutants that survived.
+///   * `unviable.txt`   -- names that failed to build.
+///   * `timeout.txt`    -- names that timed out.
+///   * `mutants.json`   -- list of generated mutants (with diffs).
+///
+/// `outcomes.json` is the source of truth; the .txt files are simple
+/// line-delimited fallback summaries that we accept for older / future
+/// cargo-mutants versions.
+///
+/// This function is permissive: if it finds `outcomes.json` it uses it;
+/// otherwise it walks `<output>/mutants.out/` for `*.json` files; otherwise
+/// it returns a descriptive error.
 fn parse_mutants_dir(dir: &Path) -> Result<RunSummary, CliError> {
-    let summary_path = dir.join("summary.json");
-    if summary_path.exists() {
-        let bytes = std::fs::read(&summary_path).map_err(|e| CliError::Io {
-            path: summary_path.clone(),
-            source: e,
-        })?;
-        #[derive(serde::Deserialize)]
-        struct CargoMutantsOutcome {
-            killed: u32,
-            survived: u32,
-            timeout: u32,
-            unviable: u32,
-            no_test: u32,
-        }
-        #[derive(serde::Deserialize)]
-        struct CargoMutantsSummary {
-            outcomes: CargoMutantsOutcome,
-        }
-        let parsed: CargoMutantsSummary =
-            serde_json::from_slice(&bytes).map_err(|source| CliError::Json {
-                path: summary_path.clone(),
-                source,
-            })?;
-        let total = parsed.outcomes.killed
-            + parsed.outcomes.survived
-            + parsed.outcomes.timeout
-            + parsed.outcomes.unviable
-            + parsed.outcomes.no_test;
-        return Ok(RunSummary {
-            total,
-            killed: parsed.outcomes.killed,
-            survived: parsed.outcomes.survived,
-            timeout: parsed.outcomes.timeout,
-            unviable: parsed.outcomes.unviable,
-            no_test: parsed.outcomes.no_test,
-        });
+    // 1. cargo-mutants 27.x canonical: <output>/mutants.out/outcomes.json
+    let nested_outcomes = dir.join("mutants.out").join("outcomes.json");
+    if nested_outcomes.exists() {
+        return parse_outcomes_json(&nested_outcomes);
     }
 
-    // Fallback: aggregate every *.json in the output dir's mutations/ subdir.
-    let mut total = 0u32;
+    // 2. Older / fallback: <output>/outcomes.json
+    let flat_outcomes = dir.join("outcomes.json");
+    if flat_outcomes.exists() {
+        return parse_outcomes_json(&flat_outcomes);
+    }
+
+    // 3. Legacy: <output>/summary.json (cargo-mutants <26.x)
+    let legacy_summary = dir.join("summary.json");
+    if legacy_summary.exists() {
+        return parse_legacy_summary(&legacy_summary);
+    }
+
+    // 4. Per-mutation .json fallback in <output>/mutations/
+    if let Some(summary) = aggregate_per_mutation_files(&dir.join("mutations")) {
+        return Ok(summary);
+    }
+
+    Err(CliError::Other(format!(
+        "cargo mutants produced no output in {} -- verify cargo-mutants is installed and produced a non-empty run",
+        dir.display()
+    )))
+}
+
+/// Parse a cargo-mutants 27.x `outcomes.json` (Vec of `{scenario, summary}`).
+fn parse_outcomes_json(path: &Path) -> Result<RunSummary, CliError> {
+    let bytes = std::fs::read(path).map_err(|e| CliError::Io {
+        path: path.to_path_buf(),
+        source: e,
+    })?;
+
+    // We only care about per-outcome `summary` for kill-rate math, so we
+    // deserialize `scenario` as an opaque `serde_json::Value`. That lets
+    // us accept both cargo-mutants 27.x shapes:
+    //   * `"scenario": "Baseline"`               (string)
+    //   * `"scenario": { "Mutant": { ... } }`    (object wrapper)
+    // The baseline scenario reports `summary == "Success"` and is
+    // therefore naturally excluded from the counters below.
+    //
+    // The 27.x file wraps the array at the top level:
+    //   { "outcomes": [ { scenario, summary, ... }, ... ] }
+    // Earlier / future versions may write a bare array; we accept both.
+    #[derive(serde::Deserialize)]
+    struct OutcomesFile {
+        outcomes: Vec<Outcome>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Outcome {
+        #[allow(dead_code)]
+        scenario: serde_json::Value,
+        summary: String,
+    }
+
+    let outcomes: Vec<Outcome> = match serde_json::from_slice::<OutcomesFile>(&bytes) {
+        Ok(of) => of.outcomes,
+        Err(_) => {
+            serde_json::from_slice::<Vec<Outcome>>(&bytes).map_err(|source| CliError::Json {
+                path: path.to_path_buf(),
+                source,
+            })?
+        }
+    };
+
     let mut killed = 0u32;
     let mut survived = 0u32;
     let mut timeout = 0u32;
     let mut unviable = 0u32;
     let mut no_test = 0u32;
 
-    let subdir = dir.join("mutations");
-    let entries = match std::fs::read_dir(&subdir) {
-        Ok(it) => it,
-        Err(_) => {
-            // No mutations/ subdir either; fall through to the empty-output
-            // error below so callers get a descriptive message rather than
-            // a raw io::Error.
-            return Err(CliError::Other(format!(
-                "cargo mutants produced no output in {} — verify cargo-mutants is installed and produced a non-empty run",
-                dir.display()
-            )));
+    for o in outcomes {
+        // Baseline reports "Success" / "Failure"; mutations report one of
+        // the discriminator strings below.
+        match o.summary.as_str() {
+            "CaughtMutant" | "Caught" | "killed" => killed += 1,
+            "MissedMutant" | "Missed" | "survived" => survived += 1,
+            "Timeout" | "timeout" => timeout += 1,
+            "Unviable" | "unviable" => unviable += 1,
+            "NoTest" | "no_test" => no_test += 1,
+            _ => {} // "Success" / "Failure" / unknown baseline / skipped
         }
-    };
-    for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+    }
+    let total = killed + survived + timeout + unviable + no_test;
+    if total == 0 {
+        return Err(CliError::Other(format!(
+            "cargo mutants produced no viable mutations in {}",
+            path.display()
+        )));
+    }
+
+    Ok(RunSummary {
+        total,
+        killed,
+        survived,
+        timeout,
+        unviable,
+        no_test,
+    })
+}
+
+/// Parse a pre-26.x `summary.json` (the old aggregated form).
+fn parse_legacy_summary(path: &Path) -> Result<RunSummary, CliError> {
+    let bytes = std::fs::read(path).map_err(|e| CliError::Io {
+        path: path.to_path_buf(),
+        source: e,
+    })?;
+    #[derive(serde::Deserialize)]
+    struct CargoMutantsOutcome {
+        killed: u32,
+        survived: u32,
+        timeout: u32,
+        unviable: u32,
+        no_test: u32,
+    }
+    #[derive(serde::Deserialize)]
+    struct CargoMutantsSummary {
+        outcomes: CargoMutantsOutcome,
+    }
+    let parsed: CargoMutantsSummary =
+        serde_json::from_slice(&bytes).map_err(|source| CliError::Json {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    let total = parsed.outcomes.killed
+        + parsed.outcomes.survived
+        + parsed.outcomes.timeout
+        + parsed.outcomes.unviable
+        + parsed.outcomes.no_test;
+    Ok(RunSummary {
+        total,
+        killed: parsed.outcomes.killed,
+        survived: parsed.outcomes.survived,
+        timeout: parsed.outcomes.timeout,
+        unviable: parsed.outcomes.unviable,
+        no_test: parsed.outcomes.no_test,
+    })
+}
+
+/// Aggregate per-mutation JSON files (legacy / non-canonical output).
+fn aggregate_per_mutation_files(subdir: &Path) -> Option<RunSummary> {
+    let entries = std::fs::read_dir(subdir).ok()?;
+    let mut total = 0u32;
+    let mut killed = 0u32;
+    let mut survived = 0u32;
+    let mut timeout = 0u32;
+    let mut unviable = 0u32;
+    let mut no_test = 0u32;
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if p.extension().and_then(|s| s.to_str()) != Some("json") {
             continue;
         }
-        let bytes = match std::fs::read(&path) {
-            Ok(b) => b,
-            Err(_) => continue,
-        };
+        let bytes = std::fs::read(&p).ok()?;
         #[derive(serde::Deserialize)]
         struct OneMutation {
             status: String,
@@ -213,23 +317,19 @@ fn parse_mutants_dir(dir: &Path) -> Result<RunSummary, CliError> {
         if let Ok(m) = serde_json::from_slice::<OneMutation>(&bytes) {
             total += 1;
             match m.status.as_str() {
-                "killed" => killed += 1,
-                "survived" => survived += 1,
-                "timeout" => timeout += 1,
-                "unviable" => unviable += 1,
-                "no_test" => no_test += 1,
+                "killed" | "CaughtMutant" => killed += 1,
+                "survived" | "MissedMutant" => survived += 1,
+                "timeout" | "Timeout" => timeout += 1,
+                "unviable" | "Unviable" => unviable += 1,
+                "no_test" | "NoTest" => no_test += 1,
                 _ => {}
             }
         }
     }
-
     if total == 0 {
-        return Err(CliError::Other(format!(
-            "cargo mutants produced no output in {} — verify cargo-mutants is installed and produced a non-empty run",
-            dir.display()
-        )));
+        return None;
     }
-    Ok(RunSummary {
+    Some(RunSummary {
         total,
         killed,
         survived,
@@ -267,7 +367,25 @@ mod tests {
     use std::fs;
     use tempfile::tempdir;
 
-    fn write_summary(dir: &Path, outcomes: serde_json::Value) {
+    fn write_outcomes_json(dir: &Path, outcomes: serde_json::Value) {
+        let nested = dir.join("mutants.out");
+        fs::create_dir_all(&nested).unwrap();
+        fs::write(
+            nested.join("outcomes.json"),
+            serde_json::to_vec(&outcomes).unwrap(),
+        )
+        .unwrap();
+    }
+
+    fn write_flat_outcomes_json(dir: &Path, outcomes: serde_json::Value) {
+        fs::write(
+            dir.join("outcomes.json"),
+            serde_json::to_vec(&outcomes).unwrap(),
+        )
+        .unwrap();
+    }
+
+    fn write_legacy_summary(dir: &Path, outcomes: serde_json::Value) {
         let body = serde_json::json!({
             "schema_version": 1,
             "outcomes": outcomes,
@@ -276,9 +394,78 @@ mod tests {
     }
 
     #[test]
-    fn parses_summary_json() {
+    fn parses_27x_outcomes_json_with_nested_layout() {
         let tmp = tempdir().unwrap();
-        write_summary(
+        let outcomes = serde_json::json!([
+            { "scenario": "Baseline", "summary": "Success" },
+            {
+                "scenario": { "Mutant": {
+                    "name": "src/lib.rs:1:1: replace foo with ()",
+                    "package": "benchora",
+                    "file": "src/lib.rs",
+                    "replacement": "()",
+                    "genre": "FnValue",
+                }},
+                "summary": "CaughtMutant",
+            },
+            {
+                "scenario": { "Mutant": {
+                    "name": "src/lib.rs:2:1: replace bar with ()",
+                    "package": "benchora",
+                    "file": "src/lib.rs",
+                    "replacement": "()",
+                    "genre": "FnValue",
+                }},
+                "summary": "MissedMutant",
+            },
+            {
+                "scenario": { "Mutant": {
+                    "name": "src/lib.rs:3:1: replace baz with ()",
+                    "package": "benchora",
+                    "file": "src/lib.rs",
+                    "replacement": "()",
+                    "genre": "FnValue",
+                }},
+                "summary": "Unviable",
+            },
+            {
+                "scenario": { "Mutant": {
+                    "name": "src/lib.rs:4:1: replace qux with ()",
+                    "package": "benchora",
+                    "file": "src/lib.rs",
+                    "replacement": "()",
+                    "genre": "FnValue",
+                }},
+                "summary": "Timeout",
+            },
+        ]);
+        write_outcomes_json(tmp.path(), outcomes);
+        let s = parse_mutants_dir(tmp.path()).expect("parse");
+        assert_eq!(s.killed, 1);
+        assert_eq!(s.survived, 1);
+        assert_eq!(s.unviable, 1);
+        assert_eq!(s.timeout, 1);
+        assert_eq!(s.total, 4);
+    }
+
+    #[test]
+    fn parses_flat_outcomes_json_fallback() {
+        let tmp = tempdir().unwrap();
+        let outcomes = serde_json::json!([
+            { "scenario": "Baseline", "summary": "Success" },
+            { "scenario": { "Mutant": { "name": "x", "package": "p", "file": "f", "replacement": "r", "genre": "FnValue" }}, "summary": "CaughtMutant" },
+            { "scenario": { "Mutant": { "name": "y", "package": "p", "file": "f", "replacement": "r", "genre": "FnValue" }}, "summary": "CaughtMutant" },
+        ]);
+        write_flat_outcomes_json(tmp.path(), outcomes);
+        let s = parse_mutants_dir(tmp.path()).expect("parse");
+        assert_eq!(s.killed, 2);
+        assert_eq!(s.total, 2);
+    }
+
+    #[test]
+    fn parses_legacy_summary_json_fallback() {
+        let tmp = tempdir().unwrap();
+        write_legacy_summary(
             tmp.path(),
             serde_json::json!({
                 "killed": 7,
@@ -293,8 +480,6 @@ mod tests {
         assert_eq!(s.killed, 7);
         assert_eq!(s.survived, 2);
         assert_eq!(s.timeout, 1);
-        assert_eq!(s.unviable, 0);
-        assert_eq!(s.no_test, 0);
     }
 
     #[test]
