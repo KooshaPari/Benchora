@@ -24,7 +24,9 @@ use clap::{Parser, Subcommand};
 pub mod baseline;
 pub mod compare;
 pub mod error;
+pub mod mutate;
 pub mod report;
+pub mod tracker_db;
 
 pub use error::CliError;
 
@@ -86,6 +88,22 @@ pub enum Cmd {
         #[arg(long, value_name = "PCT", env = "BENCHORA_REGRESSION_THRESHOLD_PCT")]
         regression_threshold_pct: Option<f64>,
     },
+    /// Run mutation testing.
+    Mutate {
+        /// Package to mutate (passed to `cargo mutants -p <pkg>`).
+        #[arg(long)]
+        package: Option<String>,
+        /// Restrict mutations to a single source file path.
+        #[arg(long)]
+        file: Option<PathBuf>,
+        /// Minimum mutation score required for success (0-100).
+        /// Fails the run if the measured kill rate is below the threshold.
+        #[arg(long, value_name = "PCT")]
+        min_score: Option<f64>,
+        /// Directory for `cargo mutants` output. Default: `mutants-out`.
+        #[arg(long, default_value = "mutants-out")]
+        output: Option<PathBuf>,
+    },
     /// List stored baselines / reports.
     List {
         /// What to list.
@@ -98,6 +116,7 @@ pub enum Cmd {
 pub enum ListKind {
     Baselines,
     Reports,
+    Mutations,
 }
 
 /// Entry-point invoked by `src/bin/benchora.rs`.
@@ -119,9 +138,22 @@ pub fn run(cli: Cli) -> Result<(), CliError> {
             }
             compare::diff(&cli.db, &baseline, &current)
         }
+        Cmd::Mutate {
+            package,
+            file,
+            min_score,
+            output,
+        } => mutate::run(
+            &cli.db,
+            package.as_deref(),
+            file.as_deref(),
+            min_score,
+            output.as_deref(),
+        ),
         Cmd::List { kind } => match kind {
             ListKind::Baselines => baseline::list(&cli.db),
             ListKind::Reports => report::list(&cli.db),
+            ListKind::Mutations => tracker_db::list(&cli.db, 20),
         },
     }
 }
