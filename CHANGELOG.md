@@ -7,34 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- README Install prefers `cargo install benchora --locked` after crates.io publish of `0.2.0`.
+- Work State reflects tagged Release + published crate.
+
 ## [0.2.0] - 2026-07-19
 
-First tagged release candidate. Crate version matches `Cargo.toml`. Cut the
-`v0.2.0` git tag and GitHub Release when ready; crates.io publish is T2.
+First tagged release. Crate version matches `Cargo.toml`. Git tag `v0.2.0`,
+GitHub Release, and crates.io publish (`benchora` 0.2.0) are complete.
 
 ### Changed
 
 - CI `cargo test` is now gating (`continue-on-error` removed from the test job).
 - Standalone `cargo-deny` workflow no longer soft-fails (aligned with CI deny job).
-- README Work State made honest: crate version `0.2.0` exists in-tree but is
-  **not** tagged and **not** published to crates.io until operators cut the tag.
-- Install docs lead with `cargo install --path . --locked` (git install as
-  alternate). Removed any implication that `cargo install benchora` works from
-  crates.io.
+- README Work State: crate version `0.2.0` prepared for tag/Release (T1) and
+  crates.io (T2).
+- Install docs led with `cargo install --path . --locked` until crates.io
+  publish; post-publish README prefers `cargo install benchora --locked`.
 - Release attestation workflow no longer soft-fails empty binary staging
   (`find … || true` / `if-no-files-found: warn`); requires `target/release/benchora`.
 - Getting-started docs corrected from stale `gauge` crate naming to `benchora` /
   `phenotype_xdd_lib`.
 - Action SHA pins: `actions/checkout` unified to v7.0.0 where pinned.
 
-### Operator notes (tag + publish)
+### Operator notes
 
-See [docs/guides/cutting-a-release.md](docs/guides/cutting-a-release.md).
-
-1. Tag `v0.2.0` and create a GitHub Release (attestation workflow attaches artifacts).
-2. T2: `cargo publish` to crates.io.
-3. After crates.io succeeds, update README install to prefer
-   `cargo install benchora --locked`.
+See [docs/guides/cutting-a-release.md](docs/guides/cutting-a-release.md) for the
+next version cut. `v0.2.0` tag, Release, and crates.io publish are done.
 
 [Unreleased]: https://github.com/KooshaPari/Benchora/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/KooshaPari/Benchora/releases/tag/v0.2.0

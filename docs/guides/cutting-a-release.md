@@ -44,7 +44,10 @@ them. Verify the workflow run succeeds before treating the release as complete.
 
 Do **not** run `cargo publish` in T1.
 
-## T2 — crates.io publish (remaining after T1 tag)
+## T2 — crates.io publish
+
+For `0.2.0` this step is **done** (`benchora` on crates.io). For the next
+version, after tagging:
 
 ```bash
 cargo login          # once per machine / token

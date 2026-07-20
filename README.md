@@ -25,17 +25,15 @@
 | Field | Value |
 |---|---|
 | Status | ACTIVE (repo unarchived) |
-| Crate version | `0.2.0` in `Cargo.toml` — CHANGELOG `[0.2.0]` ready; **no git tag / GitHub Release yet** |
-| crates.io | **Not published** (crate name `benchora` is free; do not use `cargo install benchora`) |
-| Install path | from source — see [Install](#install) |
+| Crate version | `0.2.0` — tagged [`v0.2.0`](https://github.com/KooshaPari/Benchora/releases/tag/v0.2.0) |
+| crates.io | **Published** — [`benchora` 0.2.0](https://crates.io/crates/benchora) |
+| Install path | crates.io preferred — see [Install](#install) |
 | Scorecard | ~82 / B (`audit_scorecard.json`) |
-| Focus | T1 — CI test gating + release-ready CHANGELOG; cut tag via [cutting-a-release](./docs/guides/cutting-a-release.md) |
+| Focus | Post-0.2.0 hardening; keep CI green |
 
-Progress: `█████████░` ~90% toward first release — tag/Release pending; crates.io is T2.
+Progress: `██████████` ~100% for first crates.io release.
 
-> Honest gap: local `cargo test --locked` is green and CI tests are gating;
-> end-user install stays path/git until operators tag `v0.2.0` (T1) and
-> `cargo publish` (T2).
+> First release complete: git tag `v0.2.0`, GitHub Release, and `cargo publish`.
 
 [![CI](https://github.com/KooshaPari/Benchora/actions/workflows/ci.yml/badge.svg)](https://github.com/KooshaPari/Benchora/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -48,7 +46,13 @@ and reusable xDD utilities.
 
 ## Install
 
-**Not on crates.io yet.** Install from a clone (preferred one-liner):
+Preferred (crates.io):
+
+```bash
+cargo install benchora --locked
+```
+
+From a clone (dev / unreleased `main`):
 
 ```bash
 cargo install --path . --locked
@@ -107,19 +111,18 @@ The `--db` flag (or `BENCHORA_DB`) points the CLI at a SQLite file; default `./b
 | `benchora list [reports\|baselines\|mutations]` | List stored SQLite entries |
 | `benchora mutate` | Run mutation testing via `cargo mutants` |
 
-## Publish / release readiness (T1 → T2)
+## Publish / release readiness
 
-| Item | Today (T1) | Next (T2) |
-|---|---|---|
-| CI tests | Gating (`cargo test --all --locked`) | Keep green on `main` |
-| CHANGELOG | Real `[0.2.0] - 2026-07-19` section | Unreleased entries for post-0.2.0 |
-| GitHub Release | None — cut `v0.2.0` when ready | Attestation attaches artifacts |
-| crates.io | Not published | `cargo publish --locked` after tag |
+| Item | Status |
+|---|---|
+| CI tests | Gating (`cargo test --all --locked`) |
+| CHANGELOG | `[0.2.0] - 2026-07-19` |
+| GitHub Release | [`v0.2.0`](https://github.com/KooshaPari/Benchora/releases/tag/v0.2.0) |
+| crates.io | Published (`benchora` 0.2.0) |
 
-Exact tag / Release / publish commands:
-[docs/guides/cutting-a-release.md](./docs/guides/cutting-a-release.md).
+Next-cut runbook: [docs/guides/cutting-a-release.md](./docs/guides/cutting-a-release.md).
 
-Do **not** treat the GitHub “release” badge as proof of a crates.io package.
+crates.io package: [`benchora` on crates.io](https://crates.io/crates/benchora).
 
 ## Documentation
 
