@@ -48,9 +48,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-artifacts
-          # Copy all built executables
-          find target/release -maxdepth 1 -type f -executable \
-            -exec cp -t release-artifacts/ {} + 2>/dev/null || true
+          # Require the primary CLI binary — do not soft-fail empty staging.
+          test -x target/release/benchora
+          cp -f target/release/benchora release-artifacts/benchora
           # Source tarball
           tar \
             --exclude='./target' \
@@ -71,13 +71,16 @@ jobs:
           EOF
           echo "=== Release artifacts ==="
           ls -la release-artifacts/
+          test -s release-artifacts/benchora
+          test -s release-artifacts/source.tar.gz
+          test -s release-artifacts/BUILD_MANIFEST.txt
 
       - name: Upload artifacts for provenance
         uses: actions/upload-artifact@v7
         with:
           name: release-artifacts
           path: ${{ env.CARGO_WORKDIR }}/release-artifacts/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 90
 
       - name: Attest build provenance (SLSA Build L2)
