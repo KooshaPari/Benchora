@@ -5,7 +5,12 @@ edition = "2021"
 description = "Modern benchmarking + xDD testing framework for Rust"
 license = "MIT"
 repository = "https://github.com/KooshaPari/Benchora"
+homepage = "https://github.com/KooshaPari/Benchora"
 readme = "README.md"
+keywords = ["benchmark", "criterion", "xdd", "mutation", "cli"]
+categories = ["development-tools", "development-tools::profiling"]
+# Not yet published to crates.io — keep publishable metadata ready for T1.
+# publish = true (default); first publish requires tag + CHANGELOG section.
 
 [lib]
 name = "phenotype_xdd_lib"

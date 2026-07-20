@@ -46,10 +46,11 @@ and is triggered:
 3. **Cache** — cargo registry, git index, and `target/` via
    [`Swatinem/rust-cache`][rust-cache].
 4. **Build** — `cargo build --release --locked --workspace --all-targets`.
-5. **Stage** — collect built executables, source tarball, and a build
-   manifest into `release-artifacts/`.
+5. **Stage** — require `target/release/benchora`, plus source tarball and a
+   build manifest under `release-artifacts/` (fails the job if the binary is
+   missing; no soft-fail empty staging).
 6. **Upload** — publish `release-artifacts` as a GitHub Actions artifact
-   (90 day retention).
+   (`if-no-files-found: error`, 90 day retention).
 7. **Attest** — generate SLSA Build L2 provenance with
    `slsa-framework/slsa-github-generator/attest-build-provenance@v1`.
 

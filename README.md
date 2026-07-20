@@ -1,19 +1,3 @@
-> **Work state:** ACTIVE · **Progress:** `████████░░ 80%`
-
-Benchora is a Rust benchmarking and xDD testing toolkit for the Phenotype ecosystem, pairing Criterion-based bench harnesses with a CLI, SQLite-backed baseline storage, mutation-coverage tracking, and reusable xDD utilities for contract validation and property strategies.
-
-## Usage / Quickstart
-
-```bash
-cd Benchora
-cargo build
-cargo test
-cargo bench --bench my_benchmark
-cargo run --release -- run --suite my_benchmark --out ./reports
-```
-
-Progress: `[████████░░] 80%`
-
 <!-- AI-DD-META:START -->
 <!-- This repository is planned, maintained, and managed by AI Agents only. -->
 <!-- Slop issues are expected and intentionally present as part of an HITL-less -->
@@ -35,98 +19,115 @@ Progress: `[████████░░] 80%`
 > human operator. Bug reports and contributions are still welcome, but please
 > expect AI-generated code, comments, and documentation throughout.
 <!-- AI-DD-META:END -->
-> **Work state:** ACTIVE · **Progress:** `████████░░ 80%`
-> Rust benchmarking + xDD testing framework (**Benchora**); CLI, baseline store, mutation coverage, multi-suite benches · updated 2026-06-23
 
-# Benchora
+## Work State
 
-## State
+| Field | Value |
+|---|---|
+| Status | ACTIVE (repo unarchived) |
+| Crate version | `0.2.0` in `Cargo.toml` — **no git tag / GitHub Release yet** |
+| crates.io | **Not published** (crate name `benchora` is free; do not use `cargo install benchora`) |
+| Install path | from source — see [Install](#install) |
+| Scorecard | ~82 / B (`audit_scorecard.json`) |
+| Focus | T0 — install/publish honesty + release-attestation hygiene |
 
-Progress: `[████████░░] 80%` — Rust benchmarking + xDD testing framework, **CLI ready**, mutation coverage math audited.
+Progress: `████████░░` ~80% feature surface (CLI + library + benches) — **not** release/publish complete.
 
-_Updated 2026-06-23 — DAG-002 mutation-math fix landed; coverage is now set-based; mutation score returns `None` for empty trackers._
+> Honest gap: local `cargo test` / `cargo build` are green; end-user install is
+> path/git only until a tagged release and crates.io publish land (T1).
 
 [![CI](https://github.com/KooshaPari/Benchora/actions/workflows/ci.yml/badge.svg)](https://github.com/KooshaPari/Benchora/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Benchmarking and performance testing framework** — Rust-based benchmarking suite for the Phenotype ecosystem.
+# Benchora
 
-## Project Overview
+Rust benchmarking and xDD testing toolkit for the Phenotype ecosystem — Criterion
+harnesses, a `benchora` CLI, SQLite-backed baselines, mutation-coverage tracking,
+and reusable xDD utilities.
 
-Benchora provides performance benchmarking, load testing, and metrics collection for Phenotype projects.
+## Install
 
-## Key Features
+**Not on crates.io yet.** Install from a clone (preferred one-liner):
 
-- **Criterion-based bench harness** (`my_benchmark`, `phenotype_xdd_lib_bench`)
-- **`benchora` CLI** with five subcommands: `run`, `report`, `baseline`, `compare`, `list`
-- **SQLite-backed baseline store** with sha256-pinned integrity hashes
-- **Regression detection** — 5 % threshold surfaces as non-zero exit for CI gates
-- **Mutation testing coverage** with set-based line + branch tracking (no double-counting)
-- **xDD utilities** — property strategies (`valid_uuid`, `valid_email`, `bounded_int`, …), contract verifier, spec parser/validator
-- **Reusable as a library** — `phenotype_xdd_lib` exposes the modules; CLI is a thin wrapper
+```bash
+cargo install --path . --locked
+```
 
-## Mutation-coverage guarantees
+Or from GitHub without cloning first:
 
-`MutationTracker::coverage` and `MutationTracker::branch_coverage` divide **distinct** lines/branches hit by the file's effective LOC. Repeated execution of the same line cannot inflate coverage past 100 %. `MutationTracker::mutation_score` returns `Option<f64>` — `None` for empty trackers, `Some(ratio)` otherwise — so callers cannot accidentally report a perfect score on a pristine run.
+```bash
+cargo install --git https://github.com/KooshaPari/Benchora --locked
+```
+
+Requires a recent Rust stable toolchain (`rustfmt` + `clippy`; see `rust-toolchain.toml`).
+MSRV intent: 1.75+.
+
+After install, the `benchora` binary is on your `PATH`.
 
 ## Quick Start
 
 ```bash
-# Setup
+git clone https://github.com/KooshaPari/Benchora
 cd Benchora
-cargo build
+cargo build --locked
+cargo test --locked
 
-# Run benchmarks (criterion standard harness)
+# Criterion benches
 cargo bench --bench my_benchmark
 cargo bench --bench phenotype_xdd_lib_bench
 
-# Run the full test suite (covers DAG-002 mutation-math regression)
-cargo test
-
-# Use the benchora CLI
-cargo run --release -- run     --suite my_benchmark --out ./reports
-cargo run --release -- baseline --from ./reports/my_benchmark-*.json nightly
-cargo run --release -- compare  --current ./reports/my_benchmark-*.json nightly
-cargo run --release -- list
+# CLI (from build tree)
+cargo run --release --locked --bin benchora -- run --suite my_benchmark --out ./reports
+cargo run --release --locked --bin benchora -- baseline --from ./reports/my_benchmark-*.json nightly
+cargo run --release --locked --bin benchora -- compare --current ./reports/my_benchmark-*.json nightly
+cargo run --release --locked --bin benchora -- list
 ```
 
-The `--db` flag (or `BENCHORA_DB` env var) points the CLI at a SQLite file for baselines + report metadata; default `./benchora.db`.
+The `--db` flag (or `BENCHORA_DB`) points the CLI at a SQLite file; default `./benchora.db`.
 
-## Documentation
+## Key Features
 
-- [SPEC.md](./SPEC.md) — Project specification
-
-## Traceability
-
-`/// @trace BENCH-001`
-
-## Description
-
-Rust benchmarking framework (**Benchora**) for the Phenotype ecosystem — criterion-based bench harness, SQLite-backed report + baseline store, sha256-pinned regression tracking, and the `benchora` CLI (`run | report | baseline | compare | list`).
+- **Criterion bench harnesses** (`my_benchmark`, `phenotype_xdd_lib_bench`)
+- **`benchora` CLI** — `run`, `report`, `baseline`, `compare`, `list`, `mutate`
+- **SQLite-backed baseline store** with sha256-pinned integrity hashes
+- **Regression detection** — configurable threshold; non-zero exit for CI gates
+- **Mutation coverage** — set-based line + branch tracking; `mutation_score` is `Option<f64>`
+- **xDD utilities** — property strategies, contract verifier, spec parser/validator
+- **Library + binary** — lib is `phenotype_xdd_lib`; CLI is the `benchora` bin
 
 ## CLI
 
-The `benchora` binary is the entry point. Five subcommands:
+| Subcommand | Purpose |
+|---|---|
+| `benchora run --suite <name> --out <dir>` | Execute a bench suite and write a report |
+| `benchora report <report.json>` | Summarize a report to stdout |
+| `benchora baseline --from <report.json> <name>` | Promote a report to a named baseline |
+| `benchora compare --current <report.json> <baseline>` | Diff a report against a baseline |
+| `benchora list [reports\|baselines\|mutations]` | List stored SQLite entries |
+| `benchora mutate` | Run mutation testing via `cargo mutants` |
 
-- `benchora run --suite <name> --out <report.json>` — execute a bench suite and write a report
-- `benchora report <report.json>` — summarize a report to stdout
-- `benchora baseline --from <report.json> <name>` — promote a report to a named baseline (sha256-pinned)
-- `benchora compare --current <report.json> <baseline>` — diff a report against a baseline
-- `benchora list [reports|baselines]` — list stored entries in the SQLite state DB
+## Publish / release readiness (T0 → T1)
 
-The state DB is configured via `--db <path>` (default `./benchora.db`).
+| Item | Today | T1 |
+|---|---|---|
+| Crate version | `0.2.0` in tree | Keep CHANGELOG ready; cut `v0.2.0` only when releasing |
+| crates.io | Not published | `cargo publish` after tag + CHANGELOG section |
+| GitHub Release | None | Tag + attach attested artifacts |
+| cargo-dist | Not configured | Optional; release workflow builds `benchora` explicitly |
 
-## Install
+Do **not** treat the GitHub “release” badge as proof of a crates.io package.
 
-`cargo build --release` (adds the `benchora` binary to `target/release/`) or `cargo install --path .` for a stable install. Requires Rust 1.75+ (see `rust-toolchain.toml`).
+## Documentation
 
-## Usage
-
-Run benches: `cargo bench`. Run unit tests: `cargo test`. See `SPEC.md` for the framework contract and `@trace BENCH-001` markers for requirement traceability.
+- [SPEC.md](./SPEC.md) — framework contract (`@trace BENCH-001`)
+- [docs/getting-started.md](./docs/getting-started.md) — local build/test
+- [docs/slsa.md](./docs/slsa.md) — release attestation notes
+- [CHANGELOG.md](./CHANGELOG.md) — Keep a Changelog
 
 ## Contributing
 
-PRs welcome. See `CONTRIBUTING.md`. New bench harnesses follow the existing `criterion` group layout; new metrics exporters go under a dedicated adapter crate.
+PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). Verify locally (`cargo test --locked`,
+`cargo clippy --all-targets -- -D warnings`) — GitHub Actions billing may soft-fail runners.
 
 ## License
 
