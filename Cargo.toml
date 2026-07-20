@@ -9,8 +9,8 @@ homepage = "https://github.com/KooshaPari/Benchora"
 readme = "README.md"
 keywords = ["benchmark", "criterion", "xdd", "mutation", "cli"]
 categories = ["development-tools", "development-tools::profiling"]
-# Not yet published to crates.io — keep publishable metadata ready for T1.
-# publish = true (default); first publish requires tag + CHANGELOG section.
+# Not yet published to crates.io — CHANGELOG [0.2.0] is ready (T1).
+# First publish is T2: tag v0.2.0, then cargo publish --locked.
 
 [lib]
 name = "phenotype_xdd_lib"

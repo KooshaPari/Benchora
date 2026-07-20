@@ -25,16 +25,17 @@
 | Field | Value |
 |---|---|
 | Status | ACTIVE (repo unarchived) |
-| Crate version | `0.2.0` in `Cargo.toml` — **no git tag / GitHub Release yet** |
+| Crate version | `0.2.0` in `Cargo.toml` — CHANGELOG `[0.2.0]` ready; **no git tag / GitHub Release yet** |
 | crates.io | **Not published** (crate name `benchora` is free; do not use `cargo install benchora`) |
 | Install path | from source — see [Install](#install) |
 | Scorecard | ~82 / B (`audit_scorecard.json`) |
-| Focus | T0 — install/publish honesty + release-attestation hygiene |
+| Focus | T1 — CI test gating + release-ready CHANGELOG; cut tag via [cutting-a-release](./docs/guides/cutting-a-release.md) |
 
-Progress: `████████░░` ~80% feature surface (CLI + library + benches) — **not** release/publish complete.
+Progress: `█████████░` ~90% toward first release — tag/Release pending; crates.io is T2.
 
-> Honest gap: local `cargo test` / `cargo build` are green; end-user install is
-> path/git only until a tagged release and crates.io publish land (T1).
+> Honest gap: local `cargo test --locked` is green and CI tests are gating;
+> end-user install stays path/git until operators tag `v0.2.0` (T1) and
+> `cargo publish` (T2).
 
 [![CI](https://github.com/KooshaPari/Benchora/actions/workflows/ci.yml/badge.svg)](https://github.com/KooshaPari/Benchora/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -106,14 +107,17 @@ The `--db` flag (or `BENCHORA_DB`) points the CLI at a SQLite file; default `./b
 | `benchora list [reports\|baselines\|mutations]` | List stored SQLite entries |
 | `benchora mutate` | Run mutation testing via `cargo mutants` |
 
-## Publish / release readiness (T0 → T1)
+## Publish / release readiness (T1 → T2)
 
-| Item | Today | T1 |
+| Item | Today (T1) | Next (T2) |
 |---|---|---|
-| Crate version | `0.2.0` in tree | Keep CHANGELOG ready; cut `v0.2.0` only when releasing |
-| crates.io | Not published | `cargo publish` after tag + CHANGELOG section |
-| GitHub Release | None | Tag + attach attested artifacts |
-| cargo-dist | Not configured | Optional; release workflow builds `benchora` explicitly |
+| CI tests | Gating (`cargo test --all --locked`) | Keep green on `main` |
+| CHANGELOG | Real `[0.2.0] - 2026-07-19` section | Unreleased entries for post-0.2.0 |
+| GitHub Release | None — cut `v0.2.0` when ready | Attestation attaches artifacts |
+| crates.io | Not published | `cargo publish --locked` after tag |
+
+Exact tag / Release / publish commands:
+[docs/guides/cutting-a-release.md](./docs/guides/cutting-a-release.md).
 
 Do **not** treat the GitHub “release” badge as proof of a crates.io package.
 
@@ -121,13 +125,14 @@ Do **not** treat the GitHub “release” badge as proof of a crates.io package.
 
 - [SPEC.md](./SPEC.md) — framework contract (`@trace BENCH-001`)
 - [docs/getting-started.md](./docs/getting-started.md) — local build/test
+- [docs/guides/cutting-a-release.md](./docs/guides/cutting-a-release.md) — tag + publish runbook
 - [docs/slsa.md](./docs/slsa.md) — release attestation notes
 - [CHANGELOG.md](./CHANGELOG.md) — Keep a Changelog
 
 ## Contributing
 
 PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). Verify locally (`cargo test --locked`,
-`cargo clippy --all-targets -- -D warnings`) — GitHub Actions billing may soft-fail runners.
+`cargo clippy --all-targets -- -D warnings`). Treat CI test failures as blocking.
 
 ## License
 
