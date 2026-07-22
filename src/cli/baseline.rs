@@ -10,6 +10,8 @@ use rusqlite::{params, Connection};
 
 use crate::cli::CliError;
 
+use super::time_utils;
+
 fn open(db: &Path) -> Result<Connection, CliError> {
     if let Some(parent) = db.parent() {
         if !parent.as_os_str().is_empty() {
@@ -52,6 +54,8 @@ fn sha256_file(path: &Path) -> Result<String, CliError> {
     sha256_via_pub(path)
 }
 
+pub use super::time_utils::{epoch_to_ymdhms, now_iso};
+
 /// Public re-export of the file-hash helper for cross-module reuse.
 pub fn sha256_via_pub(path: &Path) -> Result<String, CliError> {
     use sha2::{Digest, Sha256};
@@ -60,13 +64,18 @@ pub fn sha256_via_pub(path: &Path) -> Result<String, CliError> {
         path: path.to_path_buf(),
         source: e,
     })?;
-    let mut buf = Vec::new();
-    f.read_to_end(&mut buf).map_err(|e| CliError::Io {
-        path: path.to_path_buf(),
-        source: e,
-    })?;
     let mut hasher = Sha256::new();
-    hasher.update(&buf);
+    let mut buf = [0u8; 8192];
+    loop {
+        let n = f.read(&mut buf).map_err(|e| CliError::Io {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
     let digest = hasher.finalize();
     // Build the lowercase hex string byte-by-byte. Both bare `GenericArray`
     // and `&[u8]` lost their `LowerHex` impl on current `generic-array` /
@@ -83,7 +92,7 @@ pub fn promote(db: &Path, name: &str, from: &Path) -> Result<(), CliError> {
     })?;
     let suite = extract_suite(&payload).unwrap_or_else(|| "unknown".into());
     let sha = sha256_file(from)?;
-    let now = now_iso();
+    let now = time_utils::now_iso();
     conn.execute(
         r#"INSERT INTO baselines(name, suite, report_path, sha256, created_at)
            VALUES(?,?,?,?,?)
@@ -151,66 +160,9 @@ pub fn list(db: &Path) -> Result<(), CliError> {
     Ok(())
 }
 
-fn now_iso() -> String {
-    now_iso_via_pub()
-}
-
-/// Public re-export of the timestamp helper for cross-module reuse.
-pub fn now_iso_via_pub() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    // Minimal RFC3339-ish: YYYY-MM-DDTHH:MM:SSZ computed from epoch secs.
-    let (y, mo, d, h, mi, s) = epoch_to_ymdhms(secs);
-    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", y, mo, d, h, mi, s)
-}
-
-fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {
-    let s = (secs % 60) as u32;
-    let m = ((secs / 60) % 60) as u32;
-    let h = ((secs / 3600) % 24) as u32;
-    let mut days = (secs / 86_400) as i64;
-    let mut year: i32 = 1970;
-    loop {
-        let leap = is_leap(year);
-        let in_year = if leap { 366 } else { 365 };
-        if days >= in_year {
-            days -= in_year;
-            year += 1;
-        } else {
-            break;
-        }
-    }
-    let mdays = if is_leap(year) {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    } else {
-        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    };
-    let mut month = 1u32;
-    for &dm in &mdays {
-        if days >= dm as i64 {
-            days -= dm as i64;
-            month += 1;
-        } else {
-            break;
-        }
-    }
-    (year, month, (days as u32) + 1, h, m, s)
-}
-
-fn is_leap(y: i32) -> bool {
-    (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
-}
-
 fn extract_suite(json: &str) -> Option<String> {
-    // Naive: find `"suite":"..."` to avoid pulling in a JSON dep here.
-    let needle = "\"suite\":\"";
-    let start = json.find(needle)? + needle.len();
-    let rest = &json[start..];
-    let end = rest.find('"')?;
-    Some(rest[..end].to_string())
+    let v: serde_json::Value = serde_json::from_str(json).ok()?;
+    v.get("suite")?.as_str().map(|s| s.to_string())
 }
 
 // Re-export for use by report::list.

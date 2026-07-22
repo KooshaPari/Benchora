@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-22
+
+### Added
+
+- `ARCHITECTURE.md` documenting crate layout, module responsibilities, and data flow.
+- `API_REFERENCE.md` with full public API surface documentation.
+
+### Changed
+
+- Decomposed `mutate` module into focused submodules (extract, score, strategy).
+- Decomposed `compare` module into focused submodules (engine, report, threshold).
+- Extracted shared time utilities into `time_utils` module (DRY refactor).
+- Streaming SHA256 hash computation replaces monolithic read for large files.
+- `XddError` now implements `Display` via `#[derive(Display)]` for user-friendly messages.
+- Removed unused dependencies: `quickcheck`, `async-trait`, `tokio`.
+- Added 37 new tests across mutate, compare, and core modules.
+
 ### Changed
 
 - README Install prefers `cargo install benchora --locked` after crates.io publish of `0.2.0`.
@@ -36,5 +53,6 @@ GitHub Release, and crates.io publish (`benchora` 0.2.0) are complete.
 See [docs/guides/cutting-a-release.md](docs/guides/cutting-a-release.md) for the
 next version cut. `v0.2.0` tag, Release, and crates.io publish are done.
 
-[Unreleased]: https://github.com/KooshaPari/Benchora/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/KooshaPari/Benchora/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/KooshaPari/Benchora/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/KooshaPari/Benchora/releases/tag/v0.2.0

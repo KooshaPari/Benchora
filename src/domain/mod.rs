@@ -79,7 +79,7 @@ impl XddError {
 
 impl fmt::Display for XddError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[{:?}] {}", self.category, self.message)
+        write!(f, "[{}] {}", self.category, self.message)
     }
 }
 
@@ -182,7 +182,7 @@ mod tests {
     fn display_includes_category_and_message() {
         let e = XddError::spec("missing name");
         let s = e.to_string();
-        assert!(s.contains("Spec"), "display must include category: {s}");
+        assert!(s.contains("spec"), "display must include category: {s}");
         assert!(
             s.contains("missing name"),
             "display must include message: {s}"

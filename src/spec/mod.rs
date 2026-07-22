@@ -49,7 +49,7 @@ pub use parser::SpecParser;
 pub use validator::SpecValidator;
 
 /// Specification root.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Spec {
     pub spec: SpecMetadata,
     #[serde(default)]
@@ -58,7 +58,7 @@ pub struct Spec {
     pub requirements: Vec<Requirement>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SpecMetadata {
     pub name: String,
     pub version: String,
@@ -340,5 +340,237 @@ features:
         };
         let result = SpecValidator::new().validate(&spec);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_spec_default_round_trip_json() {
+        let spec = Spec::default();
+        let json = serde_json::to_string(&spec).expect("serialize");
+        let deserialized: Spec = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(deserialized.spec.name, spec.spec.name);
+        assert_eq!(deserialized.spec.version, spec.spec.version);
+        assert!(deserialized.features.is_empty());
+        assert!(deserialized.requirements.is_empty());
+    }
+
+    #[test]
+    fn test_spec_round_trip_yaml() {
+        let yaml = r#"
+spec:
+  name: RoundTrip
+  version: 2.0.0
+  description: A spec for round-trip testing
+features:
+  - id: RT-001
+    name: Round Trip Feature
+    scenario:
+      given: a serialized spec
+      when: round-tripped through YAML
+      then: deserialized spec matches original
+requirements:
+  - id: REQ-001
+    description: Must round-trip
+    priority: high
+    status: verified
+"#;
+        let spec = SpecParser::parse(yaml).expect("parse fixture");
+        let serialized = serde_yaml::to_string(&spec).expect("serialize to YAML");
+        let deserialized: Spec = serde_yaml::from_str(&serialized).expect("deserialize from YAML");
+        assert_eq!(deserialized.spec.name, "RoundTrip");
+        assert_eq!(deserialized.spec.version, "2.0.0");
+        assert_eq!(deserialized.features.len(), 1);
+        assert_eq!(deserialized.features[0].id, "RT-001");
+        assert_eq!(deserialized.requirements.len(), 1);
+        assert_eq!(deserialized.requirements[0].priority, Priority::High);
+        assert_eq!(deserialized.requirements[0].status, Status::Verified);
+    }
+
+    #[test]
+    fn test_validate_empty_version() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "Valid".to_string(),
+                version: "".to_string(),
+                description: None,
+            },
+            features: vec![],
+            requirements: vec![],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_empty_feature_name() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "Test".to_string(),
+                version: "1.0.0".to_string(),
+                description: None,
+            },
+            features: vec![Feature {
+                id: "F-001".to_string(),
+                name: "".to_string(),
+                description: None,
+                scenario: None,
+                given: vec![Condition {
+                    description: "precondition".to_string(),
+                    params: vec![],
+                }],
+                when: vec![],
+                then: vec![],
+            }],
+            requirements: vec![],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_feature_no_scenario_or_gwt() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "Test".to_string(),
+                version: "1.0.0".to_string(),
+                description: None,
+            },
+            features: vec![Feature {
+                id: "F-001".to_string(),
+                name: "Bare Feature".to_string(),
+                description: None,
+                scenario: None,
+                given: vec![],
+                when: vec![],
+                then: vec![],
+            }],
+            requirements: vec![],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_duplicate_requirement_ids() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "Test".to_string(),
+                version: "1.0.0".to_string(),
+                description: None,
+            },
+            features: vec![],
+            requirements: vec![
+                Requirement {
+                    id: "REQ-001".to_string(),
+                    description: "First".to_string(),
+                    priority: Priority::default(),
+                    status: Status::default(),
+                },
+                Requirement {
+                    id: "REQ-001".to_string(),
+                    description: "Duplicate".to_string(),
+                    priority: Priority::default(),
+                    status: Status::default(),
+                },
+            ],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_empty_requirement_description() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "Test".to_string(),
+                version: "1.0.0".to_string(),
+                description: None,
+            },
+            features: vec![Feature {
+                id: "F-001".to_string(),
+                name: "Feature".to_string(),
+                description: None,
+                scenario: None,
+                given: vec![Condition {
+                    description: "ok".to_string(),
+                    params: vec![],
+                }],
+                when: vec![],
+                then: vec![],
+            }],
+            requirements: vec![Requirement {
+                id: "REQ-001".to_string(),
+                description: "".to_string(),
+                priority: Priority::default(),
+                status: Status::default(),
+            }],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_valid_spec_passes_validation() {
+        let spec = Spec {
+            spec: SpecMetadata {
+                name: "All Good".to_string(),
+                version: "1.0.0".to_string(),
+                description: Some("A valid spec".to_string()),
+            },
+            features: vec![Feature {
+                id: "F-001".to_string(),
+                name: "Feature A".to_string(),
+                description: None,
+                scenario: Some(Scenario {
+                    given: "precondition".to_string(),
+                    when: "action".to_string(),
+                    then: "outcome".to_string(),
+                }),
+                given: vec![],
+                when: vec![],
+                then: vec![],
+            }],
+            requirements: vec![Requirement {
+                id: "REQ-001".to_string(),
+                description: "Must work".to_string(),
+                priority: Priority::High,
+                status: Status::Pending,
+            }],
+        };
+        let result = SpecValidator::new().validate(&spec);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_priority_default_is_medium() {
+        assert_eq!(Priority::default(), Priority::Medium);
+    }
+
+    #[test]
+    fn test_status_default_is_pending() {
+        assert_eq!(Status::default(), Status::Pending);
+    }
+
+    #[test]
+    fn test_spec_parse_feature_with_given_when_then() {
+        let yaml = r#"
+spec:
+  name: GWT
+  version: 1.0.0
+features:
+  - id: GWT-001
+    name: GWT Feature
+    given:
+      - description: condition A
+      - description: condition B
+    when:
+      - description: action X
+    then:
+      - description: outcome Y
+"#;
+        let spec = SpecParser::parse(yaml).expect("valid GWT spec");
+        let f = &spec.features[0];
+        assert_eq!(f.given.len(), 2);
+        assert_eq!(f.when.len(), 1);
+        assert_eq!(f.then.len(), 1);
     }
 }
