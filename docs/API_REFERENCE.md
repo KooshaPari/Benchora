@@ -68,14 +68,20 @@ List stored baselines, reports, or mutation results.
 ```bash
 benchora list baselines
 benchora list reports
+<<<<<<< HEAD
 benchora list mutations
+=======
+>>>>>>> 9edabf7 (docs(benchora): add API reference for CLI commands)
 ```
 | Arg | Default |
 |-----|---------|
 | `<kind>` | `baselines` |
+<<<<<<< HEAD
 
 ## Library surface
 
 Crate `phenotype_xdd_lib` also exports domain/property/contract/mutation/spec
 modules used by the CLI. Prefer rustdoc (`cargo doc -p benchora --open`)
 for library types; keep this file as the CLI command index.
+=======
+>>>>>>> 9edabf7 (docs(benchora): add API reference for CLI commands)
