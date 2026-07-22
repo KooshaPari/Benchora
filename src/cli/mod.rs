@@ -26,6 +26,7 @@ pub mod compare;
 pub mod error;
 pub mod mutate;
 pub mod report;
+pub(crate) mod time_utils;
 pub mod tracker_db;
 
 pub use error::CliError;
