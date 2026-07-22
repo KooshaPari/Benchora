@@ -95,7 +95,7 @@ pub fn record(
         }
         _ => 1,
     };
-    let now = crate::cli::baseline::now_iso_via_pub();
+    let now = super::time_utils::now_iso();
     conn.execute(
         r#"INSERT INTO mutation_runs(
               suite, package, file, output_dir,
