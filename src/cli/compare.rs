@@ -27,7 +27,7 @@ use rusqlite::OptionalExtension;
 use crate::cli::baseline::{open_for_read, sha256_via_pub};
 use crate::cli::CliError;
 
-use super::compare_criterion::index_benchmarks;
+use super::compare_heliosbench::index_auto;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Diff {
@@ -124,16 +124,7 @@ pub fn diff(db: &Path, baseline: &str, current: &Path) -> Result<(), CliError> {
     let current_sha = sha256_via_pub(current).ok();
 
     // Parse current report. This is mandatory.
-    let current_body = std::fs::read_to_string(current).map_err(|e| CliError::Io {
-        path: current.to_path_buf(),
-        source: e,
-    })?;
-    let current_value: serde_json::Value =
-        serde_json::from_str(&current_body).map_err(|e| CliError::Json {
-            path: current.to_path_buf(),
-            source: e,
-        })?;
-    let current_index = index_benchmarks(&current_value);
+    let current_index = index_auto(current)?;
 
     // Parse baseline report if we know where it is. A missing baseline
     // path still produces a valid (but empty-baseline) Diff so the
@@ -141,18 +132,8 @@ pub fn diff(db: &Path, baseline: &str, current: &Path) -> Result<(), CliError> {
     let baseline_index: BTreeMap<String, f64> = if let Some(path_str) = baseline_path.as_ref() {
         let p = Path::new(path_str);
         if p.exists() {
-            match std::fs::read_to_string(p)
-                .map_err(|e| CliError::Io {
-                    path: p.to_path_buf(),
-                    source: e,
-                })
-                .and_then(|raw| {
-                    serde_json::from_str::<serde_json::Value>(&raw).map_err(|e| CliError::Json {
-                        path: p.to_path_buf(),
-                        source: e,
-                    })
-                }) {
-                Ok(v) => index_benchmarks(&v),
+            match index_auto(p) {
+                Ok(index) => index,
                 Err(e) => {
                     eprintln!(
                         "warn: could not parse baseline report {}: {}",

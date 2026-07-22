@@ -13,13 +13,13 @@ proptest! {
     #[test]
     fn epoch_to_ymdhms_month_always_1_to_12(secs in 0u64..=3_250_368_000_000u64) {
         let (_year, month, _day, _h, _m, _s) = epoch_to_ymdhms(secs);
-        prop_assert!(month >= 1 && month <= 12, "month {} out of range", month);
+        prop_assert!((1..=12).contains(&month), "month {} out of range", month);
     }
 
     #[test]
     fn epoch_to_ymdhms_day_always_1_to_31(secs in 0u64..=3_250_368_000_000u64) {
         let (_year, _month, day, _h, _m, _s) = epoch_to_ymdhms(secs);
-        prop_assert!(day >= 1 && day <= 31, "day {} out of range", day);
+        prop_assert!((1..=31).contains(&day), "day {} out of range", day);
     }
 
     #[test]
