@@ -1,10 +1,10 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub(super) fn is_leap(y: i32) -> bool {
+pub fn is_leap(y: i32) -> bool {
     (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
 }
 
-pub(super) fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {
+pub fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {
     let s = (secs % 60) as u32;
     let m = ((secs / 60) % 60) as u32;
     let h = ((secs / 3600) % 24) as u32;
@@ -40,7 +40,7 @@ pub(super) fn epoch_to_ymdhms(secs: u64) -> (i32, u32, u32, u32, u32, u32) {
 /// Minimal RFC3339-ish: YYYY-MM-DDTHH:MM:SSZ computed from the current wall
 /// clock.  This was previously duplicated as `now_iso` / `now_iso_via_pub` /
 /// `now_iso_string` in baseline.rs and report.rs.
-pub(super) fn now_iso() -> String {
+pub fn now_iso() -> String {
     let secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())

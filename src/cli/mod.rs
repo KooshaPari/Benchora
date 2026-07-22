@@ -23,10 +23,13 @@ use clap::{Parser, Subcommand};
 
 pub mod baseline;
 pub mod compare;
+pub(crate) mod compare_criterion;
+pub(crate) mod compare_heliosbench;
 pub mod error;
 pub mod mutate;
+pub(crate) mod mutate_parse;
 pub mod report;
-pub(crate) mod time_utils;
+pub mod time_utils;
 pub mod tracker_db;
 
 pub use error::CliError;
