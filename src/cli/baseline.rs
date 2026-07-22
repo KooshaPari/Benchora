@@ -54,6 +54,8 @@ fn sha256_file(path: &Path) -> Result<String, CliError> {
     sha256_via_pub(path)
 }
 
+pub use super::time_utils::{epoch_to_ymdhms, now_iso};
+
 /// Public re-export of the file-hash helper for cross-module reuse.
 pub fn sha256_via_pub(path: &Path) -> Result<String, CliError> {
     use sha2::{Digest, Sha256};

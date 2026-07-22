@@ -326,12 +326,15 @@ mod tests {
     }
 
     #[test]
-    fn test_mutation_killing() {
+    fn test_introduce_mutation_same_location_kinds() {
         let mut tracker = MutationTracker::new();
         let id1 = tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
-        let _id2 = tracker.introduce_mutation("src/lib.rs", 2, MutationKind::Comparison);
+        let id2 = tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
+        // IDs are deterministic from (file, line, kind)
+        assert_eq!(id1, id2);
+        // Both are separate mutation entries; killing one only halves the score
         tracker.kill_mutation(&id1);
-        assert_eq!(tracker.mutation_score(), Some(0.5));
+        assert!((tracker.mutation_score().unwrap() - 0.5).abs() < 1e-9);
     }
 
     #[test]
@@ -341,5 +344,122 @@ mod tests {
         tracker.mark_equivalent(&id);
         // Equivalent mutations are removed from total — no scorable mutations remain.
         assert_eq!(tracker.mutation_score(), None);
+    }
+
+    #[test]
+    fn test_all_mutation_kinds_produce_valid_ids() {
+        let kinds = [
+            MutationKind::Arithmetic,
+            MutationKind::Comparison,
+            MutationKind::Boolean,
+            MutationKind::ValueReplacement,
+            MutationKind::StatementRemoval,
+        ];
+        let mut tracker = MutationTracker::new();
+        for kind in &kinds {
+            let id = tracker.introduce_mutation("src/lib.rs", 10, *kind);
+            assert!(
+                id.contains("src/lib.rs"),
+                "mutation ID should contain file path"
+            );
+            assert!(id.contains("10"), "mutation ID should contain line number");
+        }
+        assert_eq!(tracker.mutation_score(), Some(0.0));
+    }
+
+    #[test]
+    fn test_coverage_report_from_tracker() {
+        let mut tracker = MutationTracker::new();
+        tracker.record_file_loc("src/a.rs", 50);
+        tracker.record_line_execution("src/a.rs", 10);
+        tracker.record_line_execution("src/a.rs", 20);
+        tracker.record_line_execution("src/a.rs", 30);
+        let report = CoverageReport::from_tracker(&tracker);
+        assert_eq!(report.total_lines, 50);
+        assert_eq!(report.executed_lines, 3);
+        assert!((report.line_coverage - 0.06).abs() < 1e-9);
+        assert_eq!(report.total_branches, 0);
+        assert_eq!(report.executed_branches, 0);
+        assert_eq!(report.branch_coverage, 0.0);
+    }
+
+    #[test]
+    fn test_kill_nonexistent_mutation_is_noop() {
+        let mut tracker = MutationTracker::new();
+        tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
+        tracker.kill_mutation("nonexistent-id");
+        assert_eq!(tracker.mutation_score(), Some(0.0));
+    }
+
+    #[test]
+    fn test_mark_equivalent_nonexistent_is_noop() {
+        let mut tracker = MutationTracker::new();
+        let id = tracker.introduce_mutation("src/lib.rs", 1, MutationKind::Arithmetic);
+        tracker.mark_equivalent("nonexistent-id");
+        assert_eq!(tracker.mutation_score(), Some(0.0));
+        // Original mutation is still there
+        tracker.kill_mutation(&id);
+        assert_eq!(tracker.mutation_score(), Some(1.0));
+    }
+
+    #[test]
+    fn test_empty_tracker_files_iterator() {
+        let tracker = MutationTracker::new();
+        assert_eq!(tracker.files().count(), 0);
+    }
+
+    #[test]
+    fn test_files_iterator_after_recording() {
+        let mut tracker = MutationTracker::new();
+        tracker.record_line_execution("src/a.rs", 1);
+        tracker.record_line_execution("src/a.rs", 2);
+        tracker.record_line_execution("src/b.rs", 1);
+        let files: Vec<_> = tracker.files().collect();
+        assert_eq!(files.len(), 2);
+    }
+
+    #[test]
+    fn test_many_mutations_partial_kill() {
+        let mut tracker = MutationTracker::new();
+        let mut ids = Vec::new();
+        for i in 0..100 {
+            ids.push(tracker.introduce_mutation("src/lib.rs", i, MutationKind::Arithmetic));
+        }
+        // Kill 75 out of 100
+        for id in &ids[..75] {
+            tracker.kill_mutation(id);
+        }
+        let score = tracker.mutation_score().unwrap();
+        assert!((score - 0.75).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_large_input_many_files() {
+        let mut tracker = MutationTracker::new();
+        for file_idx in 0..200 {
+            let file = format!("src/module_{}.rs", file_idx);
+            for line in 1..=50 {
+                tracker.record_line_execution(&file, line);
+            }
+            tracker.record_file_loc(&file, 50);
+        }
+        for file_idx in 0..200 {
+            let file = format!("src/module_{}.rs", file_idx);
+            assert!((tracker.coverage(&file) - 1.0).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn test_branch_coverage_zero_total() {
+        let mut tracker = MutationTracker::new();
+        tracker.record_branch_execution("src/lib.rs", "if:1:then");
+        assert_eq!(tracker.branch_coverage("src/lib.rs", 0), 0.0);
+    }
+
+    #[test]
+    fn test_unknown_file_coverage() {
+        let tracker = MutationTracker::new();
+        assert_eq!(tracker.coverage("nonexistent.rs"), 0.0);
+        assert_eq!(tracker.branch_coverage("nonexistent.rs", 10), 0.0);
     }
 }
