@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Evidence-based audit re-score after T1–T5 (#79–#83): overall **82 → 85** / grade B
   (`BENCH-007`); lifts L8/L4/L20/L27/L29/L15 only where soft evidence supports.
 
+
 ## [0.2.1] - 2026-07-22
 
 ### Added
