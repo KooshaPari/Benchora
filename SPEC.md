@@ -11,12 +11,14 @@ Phenotype ecosystem component — Rust benchmarking + xDD toolkit
 | BENCH-002 | Governance surface: canonical ARCHITECTURE + SSOT index + scorecard WORK_DAG |
 | BENCH-003 | Config surface: documented env/clap knobs + soft contract test for `BENCHORA_DB` defaults |
 | BENCH-005 | Monitoring soft evidence: CLI exit codes + `benchora.report.v1` schema (no Prometheus) |
+| BENCH-006 | CLI API surface: `benchora --help` subcommand contract + rustdoc / `docs/API_REFERENCE.md` |
 
 ```text
 /// @trace BENCH-001
 /// @trace BENCH-002
 /// @trace BENCH-003
 /// @trace BENCH-005
+/// @trace BENCH-006
 ```
 
 ## Runtime configuration (env / clap)
@@ -66,6 +68,17 @@ Written by `benchora run`. Constant: `phenotype_xdd_lib::cli::report::REPORT_SCH
 | `benchmarks` | array | Criterion bencher JSON objects |
 | `host` | object | `{ target, cpus }` |
 | `note` | string \| null | Optional diagnostic |
+
+## CLI API surface (`BENCH-006`)
+
+Public product API is the clap CLI (no HTTP/OpenAPI). Soft evidence:
+[`tests/cli_help_contract_test.rs`](./tests/cli_help_contract_test.rs) asserts
+top-level help / registry list `run`, `report`, `baseline`, `compare`,
+`mutate`, `list`. Human index: [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md).
+Rustdoc: `phenotype_xdd_lib::cli`.
+
+When adding a subcommand, update API_REFERENCE, `src/cli/mod.rs` rustdoc, and
+the help contract in the same PR.
 
 ## Sources of truth
 

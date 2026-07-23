@@ -58,7 +58,7 @@ GitHub Release, and crates.io publish (`benchora` 0.2.0) are complete.
 - Install docs led with `cargo install --path . --locked` until crates.io
   publish; post-publish README prefers `cargo install benchora --locked`.
 - Release attestation workflow no longer soft-fails empty binary staging
-  (`find … || true` / `if-no-files-found: warn`); requires `target/release/benchora`.
+  (`find â€¦ || true` / `if-no-files-found: warn`); requires `target/release/benchora`.
 - Getting-started docs corrected from stale `gauge` crate naming to `benchora` /
   `phenotype_xdd_lib`.
 - Action SHA pins: `actions/checkout` unified to v7.0.0 where pinned.

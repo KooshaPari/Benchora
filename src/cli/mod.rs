@@ -1,17 +1,21 @@
-//! Benchora CLI
+//! Benchora CLI (`BENCH-006` / L15 API Surface)
 //!
-//! Thin command-line surface over the `gauge` (xdd-lib) core. Lets you run a
-//! benchmark suite, capture a JSON+Markdown report, store baselines, and
-//! compare current runs against a stored baseline.
+//! Thin command-line surface over the `phenotype_xdd_lib` core. Lets you run a
+//! benchmark suite, capture a JSON report, store baselines, compare current
+//! runs against a stored baseline, and drive mutation testing.
 //!
-//! Subcommands
-//! -----------
+//! Human docs: `docs/API_REFERENCE.md`. Soft contract:
+//! `tests/cli_help_contract_test.rs` (asserts `benchora --help` subcommands
+//! stay in lockstep with this module).
 //!
-//! * `run`       — run a benchmark suite and write a report
-//! * `report`    — read a saved report, summarize to stdout
-//! * `baseline`  — promote a report to a named baseline
-//! * `compare`   — diff the current report against a stored baseline
-//! * `list`      — list stored baselines / reports
+//! # Subcommands
+//!
+//! * [`Cmd::Run`] — run a benchmark suite and write a report
+//! * [`Cmd::Report`] — read a saved report, summarize to stdout
+//! * [`Cmd::Baseline`] — promote a report to a named baseline
+//! * [`Cmd::Compare`] — diff the current report against a stored baseline
+//! * [`Cmd::Mutate`] — run mutation testing via `cargo mutants`
+//! * [`Cmd::List`] — list stored baselines / reports / mutations
 //!
 //! All subcommands accept `--db <path>` (or the env var `BENCHORA_DB`) to
 //! point at a SQLite file that stores baselines and report metadata. The
@@ -34,12 +38,15 @@ pub mod tracker_db;
 
 pub use error::CliError;
 
-/// Top-level CLI.
+/// Top-level CLI (`benchora`).
+///
+/// Parse with [`clap::Parser`]; dispatch with [`run`]. Public surface is the
+/// clap help tree — see module docs and `docs/API_REFERENCE.md`.
 #[derive(Parser, Debug)]
 #[command(
     name = "benchora",
     version,
-    about = "Benchora CLI — benchmark run/report/baseline/compare for the gauge xDD framework."
+    about = "Benchora CLI — benchmark run/report/baseline/compare/mutate for phenotype xDD."
 )]
 pub struct Cli {
     /// Path to the Benchora SQLite DB.
@@ -55,6 +62,8 @@ pub struct Cli {
     pub cmd: Cmd,
 }
 
+/// CLI subcommand tree (must match `EXPECTED_SUBCOMMANDS` in
+/// `tests/cli_help_contract_test.rs` and `docs/API_REFERENCE.md`).
 #[derive(Subcommand, Debug)]
 pub enum Cmd {
     /// Run a benchmark suite and capture a report.

@@ -2,7 +2,7 @@
 
 > **Canonical root file** for phenotype auditors (`raw.docs.files.ARCHITECTURE`).
 > Spec: `BENCH-002`. Detailed layout: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
-> API surface: [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md).
+> API surface: [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) (`BENCH-006` help contract).
 
 ## Purpose
 

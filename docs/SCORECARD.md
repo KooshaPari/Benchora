@@ -22,7 +22,7 @@ Skip tasks that require org secrets (cloud API keys, private registry tokens).
 | L4 Observability | 65 | Canonical docs were 6/8 | No |
 | L14 Data Layer | 70 | SQLite present; migration story soft | No |
 | L16 Frontend | 70 | Docs site only | No |
-| L29 Monitoring | 70 | Exit-code / report-schema soft evidence (this PR) | No |
+| L29 Monitoring | 70 | Exit-code / report-schema soft evidence (#82) | No |
 | L27 Infrastructure | 75 | Dockerfile + soft smoke (#81) | No |
 | L13 Logging | 75 | Structured logging sparse | No |
 | L3 Agent Loop | 80 | CLI exists now; keep help stable | No |
@@ -40,13 +40,14 @@ High pillars (skip for lift): L5/L9/L25 = 100; L1/L10 = 95; L2/L11/L12/L23/L30 �
 4. **L29 Monitoring** — addressed in T4 (`BENCH-005`): exit-code +
    `benchora.report.v1` docs + `tests/monitoring_contract_test.rs` (no
    Prometheus org stack).
-5. **L15 API Surface** — expand rustdoc + `benchora --help` contract test
-   (assert subcommands); skip full OpenAPI unless HTTP lands.
+5. **L15 API Surface** — addressed in T5 (`BENCH-006`): rustdoc +
+   `benchora --help` subcommand contract test; skip full OpenAPI unless HTTP
+   lands.
 
 Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 (event/cost pillars not core to Criterion CLI).
 
-## WORK_DAG — next 4 tasks
+## WORK_DAG — next tasks
 
 ```text
 [DONE]    T1 docs+CI  ARCHITECTURE.md + SSOT.md + docs-canonical soft gate
@@ -57,8 +58,9 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
               ▼
 [DONE]    T3 infra    Minimal Dockerfile + `make docker-smoke` (no push secrets)
               │
-              ▼
-[DONE/PR] T4 monitor  Exit-code / report-schema soft evidence in docs + unit assert
+              ├──► [DONE]    T4 monitor  Exit-code / report-schema soft evidence (#82)
+              │
+              └──► [DONE/PR] T5 api      --help subcommand contract + rustdoc polish
 ```
 
 | ID | Task | Pillars | Est. lift | Blockers |
@@ -66,7 +68,8 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 | T1 | Canonical SSOT + ARCHITECTURE + soft docs CI | L8, L4 | High | Done (#79) |
 | T2 | Config surface tests + SPEC env table sync | L20, L8 | Med | Done (#80) |
 | T3 | Dockerfile + local smoke target | L27, L30 | Med | Done (#81) |
-| T4 | Monitoring soft evidence (exit codes / schema) | L29, L4 | Med | None (this PR) |
+| T4 | Monitoring soft evidence (exit codes / schema) | L29, L4 | Med | Done (#82) |
+| T5 | CLI `--help` contract + rustdoc / API_REFERENCE | L15, L3 | Med | None (this PR) |
 
 ## Lane claim rule
 
