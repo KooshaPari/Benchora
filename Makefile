@@ -1,4 +1,4 @@
-.PHONY: help build test bench lint fmt clippy audit deny doc ci clean
+.PHONY: help build test bench lint fmt clippy audit deny doc ci clean docker-smoke
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -33,3 +33,7 @@ ci: fmt lint deny audit test ## Run the full local CI matrix
 
 clean: ## cargo clean
 	cargo clean
+
+docker-smoke: ## Local multi-stage Docker build + CLI --help (no registry push)
+	docker build -t benchora:local .
+	docker run --rm benchora:local --help

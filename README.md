@@ -69,6 +69,19 @@ MSRV intent: 1.75+.
 
 After install, the `benchora` binary is on your `PATH`.
 
+### Docker (local smoke; no registry)
+
+Multi-stage image builds the release CLI. No login or push — no registry secrets:
+
+```bash
+make docker-smoke
+# equivalent:
+# docker build -t benchora:local .
+# docker run --rm benchora:local --help
+```
+
+Soft CI job `docker-smoke` runs the same local build+`--help` check (`continue-on-error`).
+
 ## Quick Start
 
 ```bash

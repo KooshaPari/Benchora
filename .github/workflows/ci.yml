@@ -153,6 +153,20 @@ jobs:
           fi
           echo "Canonical docs soft gate: PASS (BENCH-002)"
 
+  docker-smoke:
+    name: docker smoke (soft)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - name: Local image build + CLI --help (no registry)
+        run: |
+          set -euo pipefail
+          docker build -t benchora:ci .
+          docker run --rm benchora:ci --help
+          echo "Docker smoke soft gate: PASS (BENCH-004)"
+
   trace-gate:
     name: FR Coverage Gate
     uses: KooshaPari/phenotype-pm-core/.github/workflows/trace-gate.yml@master
