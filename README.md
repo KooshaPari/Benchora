@@ -28,7 +28,7 @@
 | Crate version | `0.2.0` — tagged [`v0.2.0`](https://github.com/KooshaPari/Benchora/releases/tag/v0.2.0) |
 | crates.io | **Published** — [`benchora` 0.2.0](https://crates.io/crates/benchora) |
 | Install path | crates.io preferred — see [Install](#install) |
-| Scorecard | ~82 / B (`audit_scorecard.json`) |
+| Scorecard | ~85 / B (`audit_scorecard.json`, `BENCH-007`) |
 | Focus | Post-0.2.0 hardening; keep CI green |
 
 Progress: `██████████` ~100% for first crates.io release.

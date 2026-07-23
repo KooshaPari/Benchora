@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document config precedence for DB path and compare threshold.
 - `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document CLI exit codes and report schema (`BENCH-005`).
 - `src/cli` / crate rustdoc and `docs/API_REFERENCE.md` index all six CLI subcommands (`BENCH-006`).
+- Evidence-based audit re-score after T1–T5 (#79–#83): overall **82 → 85** / grade B
+  (`BENCH-007`); lifts L8/L4/L20/L27/L29/L15 only where soft evidence supports.
 
 ## [0.2.1] - 2026-07-22
 
