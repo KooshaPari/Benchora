@@ -38,3 +38,8 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+
+# Local lane isolated cargo/target (agent builds)
+.cargo-lane-t2/
+target-lane-t2/
+

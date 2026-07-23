@@ -31,12 +31,12 @@ High pillars (skip for lift): L5/L9/L25 = 100; L1/L10 = 95; L2/L11/L12/L23/L30 �
 
 ## READY gaps — highest % upside (no org secrets)
 
-1. **L8 Compliance (+ SSOT/ARCHITECTURE)** — addressed in T1 (`BENCH-002` / #79);
-   keep soft docs gate green.
-2. **L20 Config** — still READY on main as T2 (`BENCH-003`): SPEC/SSOT env table +
-   clap `BENCHORA_DB` contract (see open lift-2 PR if present).
-3. **L27 Infrastructure** — addressed in T3 (`BENCH-004`): multi-stage `Dockerfile`
-   + `make docker-smoke` + soft CI (no registry secrets).
+1. **L8 Compliance (+ SSOT/ARCHITECTURE)** — addressed in T1 (`BENCH-002`); keep
+   soft docs gate green.
+2. **L20 Config** — addressed in T2 (`BENCH-003`): SPEC/SSOT env table + clap
+   `BENCHORA_DB` contract test.
+3. **L27 Infrastructure** — addressed in T3 (`BENCH-004`): multi-stage
+   `Dockerfile` + `make docker-smoke` + soft CI (no registry secrets).
 4. **L29 Monitoring** — soft evidence: document CLI exit codes + optional
    `--health` / report JSON schema note; no Prometheus org stack required.
 5. **L15 API Surface** — expand rustdoc + `benchora --help` contract test
@@ -51,7 +51,7 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 [DONE]    T1 docs+CI  ARCHITECTURE.md + SSOT.md + docs-canonical soft gate
               │
               ▼
-[READY]   T2 config   Expand SPEC/SSOT config section + clap env snapshot test
+[DONE/PR] T2 config   Expand SPEC/SSOT config section + clap env contract test
               │
               ▼
 [DONE/PR] T3 infra    Minimal Dockerfile + `make docker-smoke` (no push secrets)
@@ -63,7 +63,7 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 | ID | Task | Pillars | Est. lift | Blockers |
 |----|------|---------|-----------|----------|
 | T1 | Canonical SSOT + ARCHITECTURE + soft docs CI | L8, L4 | High | Done (#79) |
-| T2 | Config surface tests + SPEC env table sync | L20, L8 | Med | After T1 |
+| T2 | Config surface tests + SPEC env table sync | L20, L8 | Med | Done (#80) |
 | T3 | Dockerfile + local smoke target | L27, L30 | Med | None (this PR) |
 | T4 | Monitoring soft evidence (exit codes / schema) | L29, L4 | Med | None |
 

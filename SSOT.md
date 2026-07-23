@@ -1,7 +1,7 @@
 # SSOT — Benchora
 
 > Single source of truth index for agents, CI soft gates, and phenotype auditors.
-> Spec ID: `BENCH-002`.
+> Spec IDs: `BENCH-002` (governance index), `BENCH-003` (runtime config).
 
 ## Canonical documents
 
@@ -26,9 +26,25 @@
 
 ## Runtime configuration (no org secrets)
 
+Canonical env table (keep in sync with [`SPEC.md`](./SPEC.md) `BENCH-003`):
+
+| Knob | Clap flag | Default | Purpose |
+|------|-----------|---------|---------|
+| `BENCHORA_DB` | `--db` (global) | `benchora.db` | SQLite path for baselines + report / mutation metadata |
+| `BENCHORA_REGRESSION_THRESHOLD_PCT` | `--regression-threshold-pct` | `5.0` | `compare` regression fail gate (percent) |
+
+| Setting | Precedence (highest wins) |
+|---------|---------------------------|
+| DB path | `--db` → `BENCHORA_DB` → `benchora.db` |
+| Regression threshold | flag → env → DB-stored value → `5.0` |
+
+Soft contract: [`tests/config_env_contract_test.rs`](./tests/config_env_contract_test.rs)
+(clap default + `BENCHORA_DB` override + help mentions env).
+
+Also (build/CI, not CLI product knobs):
+
 | Knob | Default | Purpose |
 |------|---------|---------|
-| `BENCHORA_DB` / `--db` | `./benchora.db` | SQLite path for baselines + report metadata |
 | Criterion / `cargo bench` | crate `[[bench]]` targets | Statistical benches |
 | CI `RUSTFLAGS` | `-D warnings` | Treat warnings as errors in Actions |
 
