@@ -7,14 +7,7 @@ use clap::CommandFactory;
 use phenotype_xdd_lib::cli::Cli;
 
 /// Subcommands the product documents as the public CLI API surface.
-const EXPECTED_SUBCOMMANDS: &[&str] = &[
-    "run",
-    "report",
-    "baseline",
-    "compare",
-    "mutate",
-    "list",
-];
+const EXPECTED_SUBCOMMANDS: &[&str] = &["run", "report", "baseline", "compare", "mutate", "list"];
 
 /// @trace BENCH-006
 #[test]
@@ -32,10 +25,7 @@ fn clap_long_help_lists_all_subcommands() {
 #[test]
 fn clap_subcommand_registry_matches_documented_surface() {
     let cmd = Cli::command();
-    let registered: Vec<&str> = cmd
-        .get_subcommands()
-        .map(|s| s.get_name())
-        .collect();
+    let registered: Vec<&str> = cmd.get_subcommands().map(|s| s.get_name()).collect();
 
     for name in EXPECTED_SUBCOMMANDS {
         assert!(
