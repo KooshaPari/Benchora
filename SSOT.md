@@ -1,7 +1,7 @@
 # SSOT — Benchora
 
 > Single source of truth index for agents, CI soft gates, and phenotype auditors.
-> Spec IDs: `BENCH-002` (governance), `BENCH-003` (config), `BENCH-005` (monitoring).
+> Spec IDs: `BENCH-002` (governance), `BENCH-003` (config), `BENCH-005` (monitoring), `BENCH-006` (CLI API).
 
 ## Canonical documents
 
@@ -10,7 +10,7 @@
 | Product contract / traces | [`SPEC.md`](./SPEC.md) | `BENCH-NNN` IDs; `@trace` markers |
 | Architecture (auditor root) | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical path auditors check |
 | Architecture (detail) | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Full crate map + data flow |
-| API surface | [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) | Public API reference |
+| API surface (CLI) | [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) | clap subcommands; soft help contract |
 | Monitoring (exit + schema) | [`SPEC.md`](./SPEC.md) § Monitoring | Soft L29; no Prometheus |
 | This index | [`SSOT.md`](./SSOT.md) | Doc + config pointers |
 | Agent operating notes | [`AGENTS.md`](./AGENTS.md), [`CLAUDE.md`](./CLAUDE.md) | Branch / AgilePlus mandate |
@@ -58,6 +58,21 @@ Report envelope id: **`benchora.report.v1`**
 `schema`, `suite`, `created_at`, `bench_name`, `benchmarks`, `host`.
 
 Soft contract: [`tests/monitoring_contract_test.rs`](./tests/monitoring_contract_test.rs).
+
+## CLI help / subcommand surface (`BENCH-006`)
+
+| Subcommand | Purpose |
+|------------|---------|
+| `run` | Run suite + write report |
+| `report` | Summarize saved report |
+| `baseline` | Promote report → named baseline |
+| `compare` | Diff report vs baseline |
+| `mutate` | Mutation testing via `cargo mutants` |
+| `list` | List baselines / reports / mutations |
+
+Soft contract: [`tests/cli_help_contract_test.rs`](./tests/cli_help_contract_test.rs)
+(top-level `--help` lists all six; registry matches; each subcommand help non-empty).
+Rustdoc: `src/cli/mod.rs` (`phenotype_xdd_lib::cli`).
 
 Also (build/CI, not CLI product knobs):
 

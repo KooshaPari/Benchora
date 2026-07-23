@@ -15,12 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-stage `Dockerfile` + `make docker-smoke` + soft CI `docker-smoke` (local build only; no registry secrets) (`BENCH-004`, L27).
 - SPEC/SSOT env table + clap `BENCHORA_DB` / regression-threshold contract tests (`BENCH-003`, L20 Config).
 - Exit-code + `benchora.report.v1` monitoring docs + `tests/monitoring_contract_test.rs` (`BENCH-005`, L29).
+- Soft `benchora --help` subcommand contract tests + CLI rustdoc / API_REFERENCE polish (`BENCH-006`, L15).
 
 ### Changed
 
 - `SPEC.md` lists `BENCH-002` governance traces and SSOT pointers.
 - `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document config precedence for DB path and compare threshold.
 - `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document CLI exit codes and report schema (`BENCH-005`).
+- `src/cli` / crate rustdoc and `docs/API_REFERENCE.md` index all six CLI subcommands (`BENCH-006`).
 
 ## [0.2.1] - 2026-07-22
 
@@ -58,7 +60,7 @@ GitHub Release, and crates.io publish (`benchora` 0.2.0) are complete.
 - Install docs led with `cargo install --path . --locked` until crates.io
   publish; post-publish README prefers `cargo install benchora --locked`.
 - Release attestation workflow no longer soft-fails empty binary staging
-  (`find … || true` / `if-no-files-found: warn`); requires `target/release/benchora`.
+  (`find â€¦ || true` / `if-no-files-found: warn`); requires `target/release/benchora`.
 - Getting-started docs corrected from stale `gauge` crate naming to `benchora` /
   `phenotype_xdd_lib`.
 - Action SHA pins: `actions/checkout` unified to v7.0.0 where pinned.

@@ -1,6 +1,14 @@
 # Benchora CLI Reference
 
+> Soft L15 API surface (`BENCH-006`). No HTTP/OpenAPI — the public product API
+> is the `benchora` clap tree. Soft contract:
+> [`tests/cli_help_contract_test.rs`](../tests/cli_help_contract_test.rs).
+> Rustdoc entry: `phenotype_xdd_lib::cli`.
+
 All commands accept `--db <path>` (env: `BENCHORA_DB`). Default: `benchora.db`.
+
+Top-level help (`benchora --help` / long help) must list: `run`, `report`,
+`baseline`, `compare`, `mutate`, `list`.
 
 ## `benchora run`
 Run a benchmark suite and capture a report.
@@ -60,7 +68,14 @@ List stored baselines, reports, or mutation results.
 ```bash
 benchora list baselines
 benchora list reports
+benchora list mutations
 ```
 | Arg | Default |
 |-----|---------|
 | `<kind>` | `baselines` |
+
+## Library surface
+
+Crate `phenotype_xdd_lib` also exports domain/property/contract/mutation/spec
+modules used by the CLI. Prefer rustdoc (`cargo doc -p benchora --open`)
+for library types; keep this file as the CLI command index.

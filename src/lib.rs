@@ -1,9 +1,12 @@
 //! # phenotype-xdd-lib
 //!
-//! Cross-cutting xDD utilities library for Rust projects.
+//! Cross-cutting xDD utilities library for Rust projects. The `benchora`
+//! binary is a thin CLI over this crate (`cli` module; see
+//! `docs/API_REFERENCE.md` and `BENCH-006` help-contract tests).
 //!
 //! ## Features
 //!
+//! - **CLI (`cli`)**: `run` / `report` / `baseline` / `compare` / `mutate` / `list`
 //! - **Property Testing**: Strategy definitions and custom generators
 //! - **Contract Testing**: Port/Adapter verification
 //! - **Mutation Testing**: Coverage tracking utilities
