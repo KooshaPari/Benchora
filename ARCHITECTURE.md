@@ -27,6 +27,17 @@ Full table + precedence: [`SPEC.md`](./SPEC.md) / [`SSOT.md`](./SSOT.md) (`BENCH
 | `BENCHORA_DB` / `--db` | `benchora.db` | SQLite baselines + report metadata |
 | `BENCHORA_REGRESSION_THRESHOLD_PCT` / `--regression-threshold-pct` | `5.0` | `compare` fail gate |
 
+## Monitoring (exit codes + report schema)
+
+No Prometheus / `--health` HTTP. Soft L29 evidence (`BENCH-005`):
+
+| Signal | Contract |
+|--------|----------|
+| Exit `0` / `1` / `2` | Success / `CliError` / clap usage — see [`SPEC.md`](./SPEC.md) |
+| Report JSON | `schema: "benchora.report.v1"` from `benchora run` |
+
+Soft contract: `tests/monitoring_contract_test.rs`.
+
 ## Quality gates
 
 `cargo fmt` / `clippy -D warnings` / `test` / `build --release` / `deny`, plus soft

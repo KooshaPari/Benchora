@@ -10,11 +10,13 @@ Phenotype ecosystem component — Rust benchmarking + xDD toolkit
 | BENCH-001 | Core product contract: Criterion benches, xDD utilities, CLI run/report/baseline/compare |
 | BENCH-002 | Governance surface: canonical ARCHITECTURE + SSOT index + scorecard WORK_DAG |
 | BENCH-003 | Config surface: documented env/clap knobs + soft contract test for `BENCHORA_DB` defaults |
+| BENCH-005 | Monitoring soft evidence: CLI exit codes + `benchora.report.v1` schema (no Prometheus) |
 
 ```text
 /// @trace BENCH-001
 /// @trace BENCH-002
 /// @trace BENCH-003
+/// @trace BENCH-005
 ```
 
 ## Runtime configuration (env / clap)
@@ -34,6 +36,36 @@ Public knobs only — no org secrets. Soft evidence: `tests/config_env_contract_
 | Regression threshold | `--regression-threshold-pct` → `BENCHORA_REGRESSION_THRESHOLD_PCT` → value stored in DB → `5.0` |
 
 When adding a knob, update this table, [`SSOT.md`](./SSOT.md), and the contract test in the same PR.
+
+## Monitoring (exit codes + report schema)
+
+Soft evidence for L29 — no Prometheus / org metrics stack / `--health` HTTP.
+CI and agents treat process exit + report JSON as the health signal.
+Contract test: `tests/monitoring_contract_test.rs`.
+
+### Exit codes
+
+| Code | When |
+|-----:|------|
+| `0` | `cli::run` returned `Ok` (success) |
+| `1` | Any `CliError` (I/O, DB, JSON, unknown suite, `compare` regression gate, `mutate --min-score` fail, …) |
+| `2` | Clap usage / parse failure (unknown subcommand, bad flags) before `cli::run` |
+
+Binary: `src/bin/benchora.rs` maps `Err` → `std::process::exit(1)`.
+
+### Report schema `benchora.report.v1`
+
+Written by `benchora run`. Constant: `phenotype_xdd_lib::cli::report::REPORT_SCHEMA_V1`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `schema` | string | Always `benchora.report.v1` |
+| `suite` | string | Suite name (`core`, `mutation`, …) |
+| `created_at` | string | ISO-8601 timestamp |
+| `bench_name` | string | Criterion bench target name |
+| `benchmarks` | array | Criterion bencher JSON objects |
+| `host` | object | `{ target, cpus }` |
+| `note` | string \| null | Optional diagnostic |
 
 ## Sources of truth
 

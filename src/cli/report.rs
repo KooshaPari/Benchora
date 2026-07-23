@@ -14,6 +14,21 @@ use super::time_utils;
 use crate::cli::baseline::{open_for_read, sha256_via_pub};
 use crate::cli::CliError;
 
+/// Canonical report envelope schema id (`BENCH-005` / L29 Monitoring).
+/// Soft evidence for auditors: CI and agents can key off this stable string
+/// instead of Prometheus/health endpoints (out of scope for a local CLI).
+pub const REPORT_SCHEMA_V1: &str = "benchora.report.v1";
+
+/// Required top-level keys on a `benchora.report.v1` envelope.
+pub const REPORT_V1_REQUIRED_KEYS: &[&str] = &[
+    "schema",
+    "suite",
+    "created_at",
+    "bench_name",
+    "benchmarks",
+    "host",
+];
+
 /// Run a benchmark suite and capture a JSON report to disk.
 ///
 /// Implementation:
@@ -39,7 +54,7 @@ pub fn run_suite(db: &Path, suite: &str, out: Option<&Path>) -> Result<(), CliEr
     let entries = run_criterion_bencher(&bench_name)?;
 
     let body = serde_json::json!({
-        "schema": "benchora.report.v1",
+        "schema": REPORT_SCHEMA_V1,
         "suite": suite,
         "created_at": now,
         "bench_name": bench_name,
