@@ -1,7 +1,7 @@
 # SSOT — Benchora
 
 > Single source of truth index for agents, CI soft gates, and phenotype auditors.
-> Spec IDs: `BENCH-002` (governance), `BENCH-003` (config), `BENCH-005` (monitoring), `BENCH-006` (CLI API).
+> Spec IDs: `BENCH-002` (governance), `BENCH-003` (config), `BENCH-005` (monitoring), `BENCH-006` (CLI API), `BENCH-007` (rescore).
 
 ## Canonical documents
 
@@ -18,8 +18,8 @@
 | Security reporting | [`SECURITY.md`](./SECURITY.md) | Vulnerability disclosure |
 | Changelog / semver | [`CHANGELOG.md`](./CHANGELOG.md) | Keep a Changelog |
 | License | [`LICENSE`](./LICENSE) | MIT |
-| Audit baseline grade | [`audit_scorecard.json`](./audit_scorecard.json) | Phenotype registry sweep v2 |
-| Score lift plan | [`docs/SCORECARD.md`](./docs/SCORECARD.md) | WORK_DAG for next lifts |
+| Audit grade (rescored) | [`audit_scorecard.json`](./audit_scorecard.json) | BENCH-007 after T1–T5; was 82→85 / B |
+| Score lift plan | [`docs/SCORECARD.md`](./docs/SCORECARD.md) | WORK_DAG + rescore delta |
 | Intent / boundary | [`docs/intent/Benchora.md`](./docs/intent/Benchora.md), [`docs/boundary/Benchora.md`](./docs/boundary/Benchora.md) | Registry-propagated |
 | FR coverage soft gate | [`trace-gate.toml`](./trace-gate.toml) | `min_coverage`, `strict_mode = false` |
 | Dependency policy | [`deny.toml`](./deny.toml) | cargo-deny |

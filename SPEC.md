@@ -12,6 +12,7 @@ Phenotype ecosystem component — Rust benchmarking + xDD toolkit
 | BENCH-003 | Config surface: documented env/clap knobs + soft contract test for `BENCHORA_DB` defaults |
 | BENCH-005 | Monitoring soft evidence: CLI exit codes + `benchora.report.v1` schema (no Prometheus) |
 | BENCH-006 | CLI API surface: `benchora --help` subcommand contract + rustdoc / `docs/API_REFERENCE.md` |
+| BENCH-007 | Governance re-score: evidence lifts in `audit_scorecard.json` + `docs/SCORECARD.md` after T1–T5 |
 
 ```text
 /// @trace BENCH-001
@@ -19,6 +20,7 @@ Phenotype ecosystem component — Rust benchmarking + xDD toolkit
 /// @trace BENCH-003
 /// @trace BENCH-005
 /// @trace BENCH-006
+/// @trace BENCH-007
 ```
 
 ## Runtime configuration (env / clap)
@@ -83,4 +85,4 @@ the help contract in the same PR.
 ## Sources of truth
 
 See [`SSOT.md`](./SSOT.md) and [`ARCHITECTURE.md`](./ARCHITECTURE.md).
-Score lift plan: [`docs/SCORECARD.md`](./docs/SCORECARD.md).
+Scorecard / WORK_DAG: [`docs/SCORECARD.md`](./docs/SCORECARD.md) (`BENCH-007` rescore).
