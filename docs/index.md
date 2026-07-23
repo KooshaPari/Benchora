@@ -86,7 +86,10 @@ See [Getting Started](getting-started.md) for the full walkthrough.
 
 All requirements are tracked through the `BENCH-NNN` ID scheme; see
 [`SPEC.md`](https://github.com/KooshaPari/Benchora/blob/main/SPEC.md) and the
-`/// @trace BENCH-001` markers in source.
+`/// @trace BENCH-001` markers in source. Governance / SSOT index:
+[`SSOT.md`](https://github.com/KooshaPari/Benchora/blob/main/SSOT.md),
+architecture: [`ARCHITECTURE.md`](https://github.com/KooshaPari/Benchora/blob/main/ARCHITECTURE.md),
+audit lift DAG: [`docs/SCORECARD.md`](./SCORECARD.md).
 
 ## Contributing
 

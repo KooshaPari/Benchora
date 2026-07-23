@@ -1,5 +1,8 @@
 # Benchora Architecture
 
+> Deep dive. Auditor-facing canonical root file: [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+> SSOT index: [`../SSOT.md`](../SSOT.md). Spec: `BENCH-002`.
+
 ## What It Is
 
 Rust CLI tool for benchmark comparison, mutation testing, and regression detection. Part of the xDD (eXtreme Development Discipline) framework. Stores baselines in SQLite, diffs current runs against baselines, and detects regressions exceeding configurable thresholds.
