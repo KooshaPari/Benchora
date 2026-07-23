@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Root `ARCHITECTURE.md` + `SSOT.md` for auditor canonical-doc detection (`BENCH-002`).
+- `docs/SCORECARD.md` WORK_DAG for phenotype audit lifts (baseline overall 82 / grade B).
+- Soft CI job `docs-canonical` asserting required governance docs exist.
+
+### Changed
+
+- `SPEC.md` lists `BENCH-002` governance traces and SSOT pointers.
+
 ## [0.2.1] - 2026-07-22
 
 ### Added

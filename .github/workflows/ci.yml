@@ -114,6 +114,45 @@ jobs:
         run: cargo audit
         continue-on-error: true
 
+  docs-canonical:
+    name: canonical docs (soft)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - name: Assert BENCH-002 canonical docs exist
+        run: |
+          set -euo pipefail
+          missing=0
+          for f in \
+            README.md \
+            ARCHITECTURE.md \
+            SSOT.md \
+            SPEC.md \
+            AGENTS.md \
+            CLAUDE.md \
+            CONTRIBUTING.md \
+            CHANGELOG.md \
+            LICENSE \
+            SECURITY.md \
+            docs/SCORECARD.md \
+            audit_scorecard.json \
+            trace-gate.toml
+          do
+            if [[ ! -f "$f" ]]; then
+              echo "::warning::missing canonical doc: $f"
+              missing=1
+            else
+              echo "ok: $f"
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            echo "Canonical docs soft gate: FAIL (see warnings)"
+            exit 1
+          fi
+          echo "Canonical docs soft gate: PASS (BENCH-002)"
+
   trace-gate:
     name: FR Coverage Gate
     uses: KooshaPari/phenotype-pm-core/.github/workflows/trace-gate.yml@master

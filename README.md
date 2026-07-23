@@ -126,7 +126,10 @@ crates.io package: [`benchora` on crates.io](https://crates.io/crates/benchora).
 
 ## Documentation
 
-- [SPEC.md](./SPEC.md) — framework contract (`@trace BENCH-001`)
+- [SPEC.md](./SPEC.md) — framework contract (`@trace BENCH-001` / `BENCH-002`)
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — canonical architecture (auditor root)
+- [SSOT.md](./SSOT.md) — single source of truth index
+- [docs/SCORECARD.md](./docs/SCORECARD.md) — audit grade + WORK_DAG
 - [docs/getting-started.md](./docs/getting-started.md) — local build/test
 - [docs/guides/cutting-a-release.md](./docs/guides/cutting-a-release.md) — tag + publish runbook
 - [docs/slsa.md](./docs/slsa.md) — release attestation notes
