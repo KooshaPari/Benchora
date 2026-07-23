@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Soft CI job `docs-canonical` asserting required governance docs exist.
 - Multi-stage `Dockerfile` + `make docker-smoke` + soft CI `docker-smoke` (local build only; no registry secrets) (`BENCH-004`, L27).
 - SPEC/SSOT env table + clap `BENCHORA_DB` / regression-threshold contract tests (`BENCH-003`, L20 Config).
+- Exit-code + `benchora.report.v1` monitoring docs + `tests/monitoring_contract_test.rs` (`BENCH-005`, L29).
 
 ### Changed
 
 - `SPEC.md` lists `BENCH-002` governance traces and SSOT pointers.
 - `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document config precedence for DB path and compare threshold.
+- `SPEC.md` / `SSOT.md` / `ARCHITECTURE.md` document CLI exit codes and report schema (`BENCH-005`).
 
 ## [0.2.1] - 2026-07-22
 

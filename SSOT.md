@@ -1,7 +1,7 @@
 # SSOT — Benchora
 
 > Single source of truth index for agents, CI soft gates, and phenotype auditors.
-> Spec IDs: `BENCH-002` (governance index), `BENCH-003` (runtime config).
+> Spec IDs: `BENCH-002` (governance), `BENCH-003` (config), `BENCH-005` (monitoring).
 
 ## Canonical documents
 
@@ -11,6 +11,7 @@
 | Architecture (auditor root) | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical path auditors check |
 | Architecture (detail) | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Full crate map + data flow |
 | API surface | [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) | Public API reference |
+| Monitoring (exit + schema) | [`SPEC.md`](./SPEC.md) § Monitoring | Soft L29; no Prometheus |
 | This index | [`SSOT.md`](./SSOT.md) | Doc + config pointers |
 | Agent operating notes | [`AGENTS.md`](./AGENTS.md), [`CLAUDE.md`](./CLAUDE.md) | Branch / AgilePlus mandate |
 | Contribute / quality loop | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | fmt / clippy / test / bench |
@@ -40,6 +41,23 @@ Canonical env table (keep in sync with [`SPEC.md`](./SPEC.md) `BENCH-003`):
 
 Soft contract: [`tests/config_env_contract_test.rs`](./tests/config_env_contract_test.rs)
 (clap default + `BENCHORA_DB` override + help mentions env).
+
+## Monitoring (no org metrics stack)
+
+CLI health signal for L29 (`BENCH-005`): process **exit codes** + report JSON
+schema — not Prometheus, tracing SaaS, or a `--health` HTTP endpoint.
+
+| Code | Meaning |
+|-----:|---------|
+| `0` | Success (`cli::run` → `Ok`) |
+| `1` | `CliError` (incl. compare regression / mutate min-score) |
+| `2` | Clap usage error (before dispatch) |
+
+Report envelope id: **`benchora.report.v1`**
+(`phenotype_xdd_lib::cli::report::REPORT_SCHEMA_V1`). Required keys:
+`schema`, `suite`, `created_at`, `bench_name`, `benchmarks`, `host`.
+
+Soft contract: [`tests/monitoring_contract_test.rs`](./tests/monitoring_contract_test.rs).
 
 Also (build/CI, not CLI product knobs):
 
