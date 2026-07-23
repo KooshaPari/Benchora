@@ -20,10 +20,12 @@ benches/           → Criterion harnesses
 
 ## Config (no org secrets)
 
+Full table + precedence: [`SPEC.md`](./SPEC.md) / [`SSOT.md`](./SSOT.md) (`BENCH-003`).
+
 | Knob | Default | Role |
 |------|---------|------|
-| `BENCHORA_DB` / `--db` | `./benchora.db` | SQLite baselines + report metadata |
-| regression threshold | `5.0%` | `compare` fail gate |
+| `BENCHORA_DB` / `--db` | `benchora.db` | SQLite baselines + report metadata |
+| `BENCHORA_REGRESSION_THRESHOLD_PCT` / `--regression-threshold-pct` | `5.0` | `compare` fail gate |
 
 ## Quality gates
 
