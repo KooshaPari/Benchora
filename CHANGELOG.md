@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Root `ARCHITECTURE.md` + `SSOT.md` for auditor canonical-doc detection (`BENCH-002`).
 - `docs/SCORECARD.md` WORK_DAG for phenotype audit lifts (baseline overall 82 / grade B).
 - Soft CI job `docs-canonical` asserting required governance docs exist.
+- Multi-stage `Dockerfile` + `make docker-smoke` + soft CI `docker-smoke` (local build only; no registry secrets) (`BENCH-004`, L27).
 - SPEC/SSOT env table + clap `BENCHORA_DB` / regression-threshold contract tests (`BENCH-003`, L20 Config).
 
 ### Changed

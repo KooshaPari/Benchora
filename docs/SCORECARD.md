@@ -23,7 +23,7 @@ Skip tasks that require org secrets (cloud API keys, private registry tokens).
 | L14 Data Layer | 70 | SQLite present; migration story soft | No |
 | L16 Frontend | 70 | Docs site only | No |
 | L29 Monitoring | 70 | Health/metrics soft evidence | No |
-| L27 Infrastructure | 75 | No Dockerfile / compose | No |
+| L27 Infrastructure | 75 | Dockerfile + soft smoke (this PR) | No |
 | L13 Logging | 75 | Structured logging sparse | No |
 | L3 Agent Loop | 80 | CLI exists now; keep help stable | No |
 
@@ -35,8 +35,8 @@ High pillars (skip for lift): L5/L9/L25 = 100; L1/L10 = 95; L2/L11/L12/L23/L30 �
    soft docs gate green.
 2. **L20 Config** — addressed in T2 (`BENCH-003`): SPEC/SSOT env table + clap
    `BENCHORA_DB` contract test.
-3. **L27 Infrastructure** — add a minimal multi-stage `Dockerfile` for
-   `cargo build --release` / CLI smoke (no registry secrets).
+3. **L27 Infrastructure** — addressed in T3 (`BENCH-004`): multi-stage
+   `Dockerfile` + `make docker-smoke` + soft CI (no registry secrets).
 4. **L29 Monitoring** — soft evidence: document CLI exit codes + optional
    `--health` / report JSON schema note; no Prometheus org stack required.
 5. **L15 API Surface** — expand rustdoc + `benchora --help` contract test
@@ -54,7 +54,7 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 [DONE/PR] T2 config   Expand SPEC/SSOT config section + clap env contract test
               │
               ▼
-[READY]   T3 infra    Minimal Dockerfile + `make docker-smoke` (no push secrets)
+[DONE/PR] T3 infra    Minimal Dockerfile + `make docker-smoke` (no push secrets)
               │
               ▼
 [READY]   T4 monitor  Exit-code / report-schema soft evidence in docs + unit assert
@@ -63,8 +63,8 @@ Deferred / low ROI without product change: L17, L19 (auditor mismatch), L26/L28
 | ID | Task | Pillars | Est. lift | Blockers |
 |----|------|---------|-----------|----------|
 | T1 | Canonical SSOT + ARCHITECTURE + soft docs CI | L8, L4 | High | Done (#79) |
-| T2 | Config surface tests + SPEC env table sync | L20, L8 | Med | After T1 (this PR) |
-| T3 | Dockerfile + local smoke target | L27, L30 | Med | None |
+| T2 | Config surface tests + SPEC env table sync | L20, L8 | Med | Done (#80) |
+| T3 | Dockerfile + local smoke target | L27, L30 | Med | None (this PR) |
 | T4 | Monitoring soft evidence (exit codes / schema) | L29, L4 | Med | None |
 
 ## Lane claim rule
