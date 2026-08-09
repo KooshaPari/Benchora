@@ -21,8 +21,6 @@ _*.txt
 _*.json
 _*.py
 _*.md
-# Track the helios_bench module entry point (absorbing heliosBench core)
-!src/helios_bench/__init__.py
 
 # Repo-specific lines preserved from prior .gitignore:
 *.swo
