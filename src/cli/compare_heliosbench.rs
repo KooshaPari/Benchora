@@ -3,7 +3,8 @@
 //! heliosBench (the Phenotype-org internal bench tool) emits its results in
 //! a different shape from Criterion: a top-level `results` array where each
 //! entry has a `task_id` and a `wall_time_ns` field. The full schema is
-//! documented in `heliosBench/docs/benchora_compare_schema.json`. This
+//! documented in `docs/benchora_compare_schema.json` (Benchora's local
+//! copy, kept in sync with heliosBench upstream). This
 //! reader normalizes heliosBench results into the same `name -> ns`
 //! mapping so a `benchora compare` call can use a heliosBench JSON as the
 //! "current" or "baseline" report.
