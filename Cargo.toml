@@ -44,6 +44,10 @@ harness = false
 name = "phenotype_xdd_lib_bench"
 harness = false
 
+[[bench]]
+name = "niah_comparator"
+harness = false
+
 [[example]]
 name = "basic_usage"
 path = "examples/basic_usage.rs"
