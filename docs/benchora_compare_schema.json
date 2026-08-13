@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/KooshaPari/heliosBench/docs/benchora_compare_schema.json",
-  "title": "heliosBench result (Benchora-compatible)",
+  "$id": "https://github.com/KooshaPari/Benchora/docs/benchora_compare_schema.json",
+  "title": "Benchora-compatible result (Benchora Tier-2 #2 schema)",
   "description": "Schema for a heliosBench result file consumable by `benchora compare` (Bridge Tier-2 #2). Each result is a single nanosecond wall-time measurement; the Benchora reader auto-detects this shape and normalizes it to its `name -> ns` index. Criterion reports are still supported via the auto-detect path — when `results[0].wall_time_ns` is absent, Benchora falls back to its existing `benchmarks[]` reader.",
   "type": "object",
   "required": ["results"],
