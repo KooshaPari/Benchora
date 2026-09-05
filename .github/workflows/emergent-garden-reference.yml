@@ -1,0 +1,53 @@
+name: Emergent Garden Finite-State Reference
+on:
+  push:
+    branches: [worktrees/emergent-garden-reference-20260905]
+    paths: [experiments/emergent-garden-reference/**, .github/workflows/emergent-garden-reference.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Run deterministic negative controls
+        run: |
+          mkdir -p "$RUNNER_TEMP/eg-reference"
+          python3 -m unittest discover -s experiments/emergent-garden-reference -p 'test*.py' -v 2>&1 | tee "$RUNNER_TEMP/eg-reference/tests.txt"
+      - name: Execute all defined conditions
+        run: python3 experiments/emergent-garden-reference/run_coordination_reference.py --seeds 20 --output "$RUNNER_TEMP/eg-reference/results.json"
+      - name: Verify run coverage and budget; freeze hashes
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import collections,hashlib,json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'eg-reference'
+          report=json.loads((root/'results.json').read_text())
+          rows=report['results']
+          assert len(rows)==6480
+          assert len({(r['seed'],r['task'],r['topology'],r['control'],r['fault']) for r in rows})==6480
+          assert all(r['operations']<=r['budget'] for r in rows)
+          outcomes={}
+          for control in ('unchecked','versioned_idempotent','versioned_recovery'):
+              group=[r for r in rows if r['control']==control]
+              outcomes[control]={'trials':len(group),'successes':sum(r['success'] for r in group),'false_completion_claims':sum(r['false_success'] for r in group)}
+          summary={k:v for k,v in report.items() if k not in {'results','aggregate'}}
+          summary.update(outcomes=outcomes,source_commit=os.environ['SOURCE_COMMIT'],run_id=os.environ['RUN_ID'],results_sha256=hashlib.sha256((root/'results.json').read_bytes()).hexdigest())
+          (root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          (root/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(root.glob('*')) if p.name!='SHA256SUMS'))
+          print(json.dumps(summary,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: eg-coordination-reference-${{ github.run_id }}
+          path: ${{ runner.temp }}/eg-reference/
+          retention-days: 7
+          if-no-files-found: error
