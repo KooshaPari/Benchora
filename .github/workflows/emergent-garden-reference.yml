@@ -10,6 +10,9 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -17,6 +20,7 @@ jobs:
           persist-credentials: false
       - name: Run deterministic negative controls
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/eg-reference"
           python3 -m unittest discover -s experiments/emergent-garden-reference -p 'test*.py' -v 2>&1 | tee "$RUNNER_TEMP/eg-reference/tests.txt"
       - name: Execute all defined conditions
