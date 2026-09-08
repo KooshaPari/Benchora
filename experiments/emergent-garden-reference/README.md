@@ -10,11 +10,11 @@ Six dispatch policies, three 12-job task classes, six fault states, three contro
 
 ## Local execution result
 
-| Control | Trials | Correct end states | False completion claims |
-| --- | ---: | ---: | ---: |
-| unchecked | 2160 | 1178 | 862 |
-| versioned_idempotent | 2160 | 2040 | 0 |
-| versioned_recovery | 2160 | 2160 | 0 |
+| Control              | Trials | Correct end states | False completion claims |
+| -------------------- | -----: | -----------------: | ----------------------: |
+| unchecked            |   2160 |               1178 |                     862 |
+| versioned_idempotent |   2160 |               2040 |                       0 |
+| versioned_recovery   |   2160 |               2160 |                       0 |
 
 False completion is a subset of failures. No operation ceiling was exceeded. The versioned/idempotent case prevents false completion but leaves 120 failed trials when a sole worker or fixed shard owner is lost. Explicit recovery reassigns abandoned work or restarts the lone logical worker while retaining environment state. This is not durable recovery after a real crash.
 

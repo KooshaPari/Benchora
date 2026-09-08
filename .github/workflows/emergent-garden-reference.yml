@@ -2,7 +2,8 @@ name: Emergent Garden Finite-State Reference
 on:
   push:
     branches: [worktrees/emergent-garden-reference-20260905]
-    paths: [experiments/emergent-garden-reference/**, .github/workflows/emergent-garden-reference.yml]
+    paths:
+      [experiments/emergent-garden-reference/**, .github/workflows/emergent-garden-reference.yml]
   workflow_dispatch:
 permissions:
   contents: read
