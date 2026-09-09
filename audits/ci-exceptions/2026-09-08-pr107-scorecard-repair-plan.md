@@ -5,13 +5,13 @@
 This is a planning artifact only. It authorizes no source, workflow, scorer,
 threshold, pull-request, scanner, or hosted-check change.
 
-| Field | Value |
-| --- | --- |
-| Owning repository | `KooshaPari/Benchora` |
-| Published PR | [#107](https://github.com/KooshaPari/Benchora/pull/107) |
-| Published head | `668ceed3368b26b32a57e8318c787d9e64a8a173` |
-| Base at inspection | `8520ca49db1d4da3e42fea2a11c243aff9112eb4` |
-| Owner role | Benchora maintainer assigned a future scorecard-only change |
+| Field                      | Value                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owning repository          | `KooshaPari/Benchora`                                                                                                                                                                                                                                                                                                                                                                                    |
+| Published PR               | [#107](https://github.com/KooshaPari/Benchora/pull/107)                                                                                                                                                                                                                                                                                                                                                  |
+| Published head             | `668ceed3368b26b32a57e8318c787d9e64a8a173`                                                                                                                                                                                                                                                                                                                                                               |
+| Base at inspection         | `8520ca49db1d4da3e42fea2a11c243aff9112eb4`                                                                                                                                                                                                                                                                                                                                                               |
+| Owner role                 | Benchora maintainer assigned a future scorecard-only change                                                                                                                                                                                                                                                                                                                                              |
 | Phenotype-registry linkage | Local registry routing packet: `/Users/kooshapari/CodeProjects/Phenotype/repos/phenotype-registry/docs/sessions/20260908-researchledger-corpus-audit-routing/` (repository-relative path: `docs/sessions/20260908-researchledger-corpus-audit-routing/`). This owner artifact is committed on an unpublished temporary branch in `/tmp/benchora-107-prep.9U2QCl`; neither path is a hosted Benchora URL. |
 
 The observations below are historical snapshots, not claims about current
@@ -24,11 +24,11 @@ threshold of `35`; SonarCloud was failed; and Infisical Sync was queued.
 `scripts/scorecard_ci.py` scores file-name heuristics. Three existing Benchora
 controls are real but uncounted by those heuristics:
 
-| Pillar | Existing evidence | Current recognition gap | Proposed recognition |
-| --- | --- | --- | --- |
-| FORMATTING | `.prettierrc.json` | Only `.prettierrc` or `rustfmt.toml` count | Also recognize `.prettierrc.json` |
-| SHIPPING | `release-plz.toml`, `.github/workflows/release.yml`, `.github/workflows/release-plz.yml` | Only `.releaserc` or `release.config.js` count | Recognize a known release configuration together with an actual release workflow |
-| RELEASE_NOTES | `CHANGELOG.md` | Only paths named `*release*note*` count | Recognize root `CHANGELOG.md` as release notes |
+| Pillar        | Existing evidence                                                                        | Current recognition gap                        | Proposed recognition                                                             |
+| ------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| FORMATTING    | `.prettierrc.json`                                                                       | Only `.prettierrc` or `rustfmt.toml` count     | Also recognize `.prettierrc.json`                                                |
+| SHIPPING      | `release-plz.toml`, `.github/workflows/release.yml`, `.github/workflows/release-plz.yml` | Only `.releaserc` or `release.config.js` count | Recognize a known release configuration together with an actual release workflow |
+| RELEASE_NOTES | `CHANGELOG.md`                                                                           | Only paths named `*release*note*` count        | Recognize root `CHANGELOG.md` as release notes                                   |
 
 The current scorer report was independently reproduced at `32/88`. If, and
 only if, those three predicates are implemented and tested as stated, the
@@ -51,13 +51,13 @@ changed scorer runs in CI.
 
 ## Dependencies and acceptance gates
 
-| Gate | Required evidence | Authority / disposition |
-| --- | --- | --- |
-| Scorer semantics | Focused positive and negative fixture tests | Benchora maintainer |
-| Threshold result | Fresh local and hosted scorecard report at unchanged threshold | Benchora maintainer and CI |
-| SonarCloud | External provider finding reviewed through its documented process | Authorized SonarCloud owner only; no dismissal implied here |
-| Infisical Sync | Fresh hosted result after its queued state resolves | Workflow/secrets owner; no manual dispatch implied here |
-| Registry linkage | Registry packet: `phenotype-registry/docs/sessions/20260908-researchledger-corpus-audit-routing/`; preserve the local committed/unpublished qualification until this owner artifact has a published path | Root/Mill coordinator |
+| Gate             | Required evidence                                                                                                                                                                                        | Authority / disposition                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Scorer semantics | Focused positive and negative fixture tests                                                                                                                                                              | Benchora maintainer                                         |
+| Threshold result | Fresh local and hosted scorecard report at unchanged threshold                                                                                                                                           | Benchora maintainer and CI                                  |
+| SonarCloud       | External provider finding reviewed through its documented process                                                                                                                                        | Authorized SonarCloud owner only; no dismissal implied here |
+| Infisical Sync   | Fresh hosted result after its queued state resolves                                                                                                                                                      | Workflow/secrets owner; no manual dispatch implied here     |
+| Registry linkage | Registry packet: `phenotype-registry/docs/sessions/20260908-researchledger-corpus-audit-routing/`; preserve the local committed/unpublished qualification until this owner artifact has a published path | Root/Mill coordinator                                       |
 
 ## Non-goals and limits
 
