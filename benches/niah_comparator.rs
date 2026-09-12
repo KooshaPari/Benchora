@@ -12,7 +12,7 @@
 //!
 //! Closes BACKLOG-BENCH-004: Add NIAH comparator contract to Benchora.
 
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, Criterion};
 use phenotype_xdd_lib::contract::ContractVerifier;
 use std::hint::black_box;
 use std::time::Duration;
@@ -50,7 +50,10 @@ fn assert_niah_gate(
     let budget_ok = drift <= BUDGET_TOLERANCE_RATIO;
     v.assert(
         budget_ok,
-        &format!("wall-clock {observed_secs:.2}s within ±{:.0}% of {golden_budget_secs:.0}s budget", BUDGET_TOLERANCE_RATIO * 100.0),
+        &format!(
+            "wall-clock {observed_secs:.2}s within ±{:.0}% of {golden_budget_secs:.0}s budget",
+            BUDGET_TOLERANCE_RATIO * 100.0
+        ),
         &format!("drift {drift:.3} exceeds ±{BUDGET_TOLERANCE_RATIO}"),
     );
 
